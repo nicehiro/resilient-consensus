@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-def build_net(sizes, activation, output_activation=nn.Identity):
+def build_net(sizes, activation, output_activation=nn.Identity,):
     """Build fully connected layer neural network.
     """
     layers = []
@@ -17,6 +17,11 @@ class DQN(nn.Module):
         super(DQN, self).__init__()
         sizes = [features_n] + hidden_sizes + [outputs_n]
         self.dqn = build_net(sizes, activation, output_activation=nn.Softmax)
+        
+    def init_weights(self, m):
+        if type(m) == nn.Linear:
+            nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+            m.bias.data.fill_(0.01)
 
     def forward(self, obs):
         return self.dqn(obs).squeeze()

@@ -118,7 +118,7 @@ class Map:
         str = ''
         for i, node in enumerate(self.nodes):
             str += 'Node: {0}\tValue: {1}\n'.format(i, node.v)
-            for v, w in node:
+            for v, w in node.weights.items():
                 str += 'Adj: {0}\tWeight: {1}\n'.format(v, w)
             str += '\n'
         return str
@@ -131,7 +131,7 @@ class Env:
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
-        self.map, self.features_n, self.outputs_n = self.make_map()
+#         self.map, self.features_n, self.outputs_n = self.make_map()
         return self.states()
 
     def make_map(self):
@@ -161,16 +161,17 @@ class Env:
         for i in range(len(action)):
             if action[i] == 1:
                 # down
-                self.map.update_by_weight_index(node_i, i, 0.9)
+                self.map.update_by_weight_index(node_i, i, 0.98)
             else:
                 # up
-                self.map.update_by_weight_index(node_i, i, 1.1)
+                self.map.update_by_weight_index(node_i, i, 1.02)
         self.map.normalize(node_i)
         # rewards
         r = 0
         for i in range(self.nodes_n):
             r += self.map.matrix[node_i][i] * abs(self.map.nodes[node_i].v - self.map.nodes[i].v)
-        r = math.exp(-1 * 1 / 1000 * r)
+        r = math.exp(-20 * r)
+        r = (r - 0.5) / 100
         return r
 
     def update_value_of_node(self):

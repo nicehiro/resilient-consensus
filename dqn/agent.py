@@ -3,8 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+import math
+import random
+
 from dqn.model import DQN
 from dqn.utils import Memory
+from utils import device
 
 
 class DQNAgent:
@@ -13,57 +17,72 @@ class DQNAgent:
                  features_n,
                  actions_n,
                  lr=0.001,
-                 memory_size=500,
-                 batch_size=64,
+                 memory_size=100000,
+                 batch_size=128,
                  gamma=0.99,
                  restore=False,
-                 restore_path='./dqn.pkl'):
+                 restore_path='./dqn/dqn.pkl'):
         self.node_i = node_i
         self.features_n = features_n
         self.actions_n = actions_n
         self.gamma = gamma
         self.memory = Memory(self.features_n, self.actions_n//2, memory_size)
-        self.device = 'cpu'
+        self.device = device
         self.dqn = DQN(self.features_n, self.actions_n,
-                       [64, 64], activation=nn.ReLU)
+                       [64, 64, 64, 64], activation=nn.ReLU)
         self.target_dqn = DQN(self.features_n, self.actions_n,
-                              [64, 64], activation=nn.ReLU)
+                              [64, 64, 64, 64], activation=nn.ReLU)
         self.target_dqn.eval()
         self.target_dqn.load_state_dict(self.dqn.state_dict())
         self.optimizer = optim.Adam(self.dqn.parameters(), lr=lr)
         self.batch_size = batch_size
         self.restore_path = restore_path
         self.steps = 0
+        self.eps_start = 0.9
+        self.eps_end = 0.01
+        self.eps_decay = 100000
+        self.need_exploit = True
+        
         if restore:
             self.restore()
 
     def act(self, obs):
-        with torch.no_grad():
-            obs = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
-            outputs = self.dqn(obs)
-            actions = []
-            for i in range(0, len(outputs), 2):
-                up = outputs[i].item()
-                down = outputs[i + 1].item()
-                actions.append(0 if up > down else 1)
-            return actions, outputs
+        sample = random.random()
+        # chose action randomly at the beginning, then slowly chose max Q_value
+        eps_threhold = self.eps_end + (self.eps_start - self.eps_end) * \
+                       math.exp(-1. * self.steps / self.eps_decay) \
+            if self.need_exploit else 0.01
+        self.steps += 1
+        if sample > eps_threhold:
+            with torch.no_grad():
+                state = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
+                outputs = self.dqn(state)
+                actions = []
+                for i in range(0, len(outputs), 2):
+                    up = outputs[i].item()
+                    down = outputs[i+1].item()
+                    actions.append(0 if up > down else 1)
+                    # print(actions)
+                return actions
+        return [random.randrange(2) for _ in range(self.actions_n // 2)]
 
     def optimize_model(self):
         if not self.memory.can_sample():
             return 0.0
-        self.steps += 1
         data = self.memory.sample(self.batch_size)
         obs, act, rew, obs_next = data['obs'], data['act'], data['rew'], data['obs_next']
         q_eval = self.dqn(obs).gather(1, act)
+        dim_a = act.shape[1]
+        q_eval = q_eval.sum(1) / dim_a
         q_next = self.target_dqn(obs_next).max(1)[0].detach()
         q_target = (q_next * self.gamma) + rew.squeeze()
 
-        loss = F.mse_loss(q_eval, q_target.unsqueeze(1))
+        loss = F.mse_loss(q_eval, q_target)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
-        if self.steps % 100 == 0:
+        if self.steps % 1000 == 0:
             self.target_dqn.load_state_dict(self.dqn.state_dict())
             self.save()
         return loss.mean()

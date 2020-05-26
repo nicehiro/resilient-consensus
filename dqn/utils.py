@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+from utils import device
+
 
 def combined_shape(length, shape=None):
     if shape is None:
