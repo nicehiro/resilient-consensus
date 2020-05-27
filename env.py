@@ -54,13 +54,13 @@ class Map:
                 m[i][v] = w
         return m
 
-    def update(self, node_i, neigh_i, w_multi):
+    def update_by_times(self, node_i, neigh_i, w_multi):
         """Update node_i's neighbor neigh_i's weight.
         """
         self.nodes[node_i].weights[neigh_i] *= w_multi
         self.matrix[node_i][neigh_i] *= w_multi
 
-    def update_by_weight_index(self, node_i, weights_i, w_multi):
+    def update_by_weight_index_and_times(self, node_i, weights_i, w_multi):
         """Update node_i's neigh_i's weight.
 
         But we only have weights index.
@@ -68,6 +68,15 @@ class Map:
         self.update(node_i,
                     self.weights_index[node_i][weights_i],
                     w_multi)
+
+    def update_by_weight(self, node_i, neigh_i, weight):
+        self.nodes[node_i].weights[neigh_i] = weight
+        self.matrix[node_i][neigh_i] = weight
+
+    def update_by_weight_index(self, node_i, weight_i, weight):
+        self.update_by_weight(node_i,
+                              self.weights_index[node_i][weight_i],
+                              weight)
 
     def normalize(self, node_i):
         """Normalize node weight make them sum to 1.
@@ -154,17 +163,22 @@ class Env:
         outputs_n = [x.neighbors_n * 2 for x in nodes]
         return Map(nodes), features_n, outputs_n
 
-    def step(self, action, node_i):
+    def step(self, action, node_i, is_continuous=False):
         """Update node_i's weights.
         """
         # update weight
-        for i in range(len(action)):
-            if action[i] == 1:
-                # down
-                self.map.update_by_weight_index(node_i, i, 0.98)
-            else:
-                # up
-                self.map.update_by_weight_index(node_i, i, 1.02)
+        if is_continuous:
+            action = action[0]
+            for i in range(len(action)):
+                self.map.update_by_weight_index(node_i, i, action[i])
+        else:
+            for i in range(len(action)):
+                if action[i] == 1:
+                    # down
+                    self.map.update_by_weight_index_and_times(node_i, i, 0.98)
+                else:
+                    # up
+                    self.map.update_by_weight_index_and_times(node_i, i, 1.02)
         self.map.normalize(node_i)
         # rewards
         r = 0
