@@ -83,6 +83,8 @@ class VPGBuffer:
         # the next two lines implement the advantage normalization trick
         adv_mean = self.adv_buf.mean()
         adv_std = np.std(self.adv_buf)
+        if adv_std == 0:
+            adv_std = 1.0
         self.adv_buf = (self.adv_buf - adv_mean) / adv_std
         data = dict(obs=self.obs_buf, act=self.act_buf, ret=self.ret_buf,
                     adv=self.adv_buf, logp=self.logp_buf)

@@ -1,4 +1,5 @@
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 
 if torch.cuda.is_available():
@@ -8,3 +9,6 @@ else:
     
     
 device = torch.device('cpu')
+
+# summary writer for tensorboard
+writer = SummaryWriter('logs')

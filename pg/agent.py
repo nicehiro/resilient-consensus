@@ -6,6 +6,7 @@ import time
 from pg.model import ActorCritic
 from pg.utils import VPGBuffer
 from gym.spaces import Box, Discrete
+from utils import writer
 
 
 class Agent:
@@ -13,10 +14,10 @@ class Agent:
                  node_i,
                  observation_space,
                  action_sapce,
-                 actor_lr=0.001,
-                 critic_lr=0.001,
+                 actor_lr=0.0001,
+                 critic_lr=0.0001,
                  memory_size=1000,
-                 train_v_iters=100,
+                 train_v_iters=50,
                  gamma=0.99,
                  lam=0.95):
         self.node_i = node_i
@@ -30,6 +31,7 @@ class Agent:
         self.actor_optim = Adam(self.ac.actor.parameters(), lr=actor_lr)
         self.critic_optim = Adam(self.ac.critic.parameters(), lr=critic_lr)
         self.train_v_iters = train_v_iters
+#         writer.add_graph(self.ac, torch.zeros([1, self.obs_dim]))
 
     def act(self, obs):
         obs = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
@@ -74,4 +76,4 @@ class Agent:
             loss_v.backward()
             self.critic_optim.step()
 
-        return loss_pi.mean().item(), loss_v.mean().item()
+        return loss_pi.item(), loss_v.item()

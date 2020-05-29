@@ -81,8 +81,8 @@ class Map:
     def normalize(self, node_i):
         """Normalize node weight make them sum to 1.
         """
+        s = self.matrix[node_i].sum()
         for i in range(self.nodes_n):
-            s = self.matrix[node_i].sum()
             self.matrix[node_i][i] /= s
             if self.nodes[node_i].weights.get(i):
                 self.nodes[node_i].weights[i] /= s
@@ -140,7 +140,7 @@ class Env:
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
-#         self.map, self.features_n, self.outputs_n = self.make_map()
+        self.map, self.features_n, self.outputs_n = self.make_map()
         return self.states()
 
     def make_map(self):
