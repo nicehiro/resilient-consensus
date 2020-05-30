@@ -135,8 +135,9 @@ class Map:
 
 class Env:
 
-    def __init__(self, nodes_n):
+    def __init__(self, nodes_n, times=1):
         self.nodes_n = nodes_n
+        self.times = times
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
@@ -144,11 +145,11 @@ class Env:
         return self.states()
 
     def make_map(self):
-        node_random = Node(0, random.random(), Property.RANDOM)
-        node_constant_1 = Node(1, random.random(), Property.CONSTANT)
-        node_constant_2 = Node(2, random.random(), Property.CONSTANT)
+        node_random = Node(0, random.random() * self.times, Property.RANDOM)
+        node_constant_1 = Node(1, random.random() * self.times, Property.CONSTANT)
+        node_constant_2 = Node(2, random.random() * self.times, Property.CONSTANT)
         nodes = [node_random, node_constant_1, node_constant_2] + \
-                [Node(i, random.random(), Property.GOOD) for i in range(3, self.nodes_n)]
+                [Node(i, random.random() * self.times, Property.GOOD) for i in range(3, self.nodes_n)]
         nodes[0].weights = {0: 1}
         nodes[1].weights = {1: 1}
         nodes[2].weights = {2: 1}
