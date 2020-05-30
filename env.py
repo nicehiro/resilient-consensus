@@ -203,3 +203,12 @@ class Env:
         """Get current states.
         """
         return self.map.states()
+
+    def is_done(self, tolerance):
+        """Check each two node's value distance lower than a mini number.
+        """
+        for i in range(self.nodes_n):
+            for j in range(self.nodes_n):
+                if abs(self.map.nodes[i] - self.map.nodes[j]) > tolerance:
+                    return False
+        return True

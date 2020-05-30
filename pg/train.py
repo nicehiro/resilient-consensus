@@ -55,10 +55,13 @@ def train():
         if epoch % 100 == 0:
             print('Episode {0}'.format(epoch))
             print(env.map)
+        if env.is_done(0.05):
+            break
     writer.close()
     print('Train finished!')
     print('Episode {0}'.format(epoch))
     print(env.map)
+    return env.map
 
 
 if __name__ == '__main__':
