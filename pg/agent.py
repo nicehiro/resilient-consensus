@@ -14,10 +14,10 @@ class Agent:
                  node_i,
                  observation_space,
                  action_sapce,
-                 actor_lr=0.0001,
-                 critic_lr=0.0001,
-                 memory_size=1000,
-                 train_v_iters=50,
+                 actor_lr=1e-4,
+                 critic_lr=1e-4,
+                 memory_size=2,
+                 train_v_iters=10,
                  gamma=0.99,
                  lam=0.95):
         self.node_i = node_i
@@ -26,7 +26,7 @@ class Agent:
             self.act_dim = action_sapce.shape[0]
         elif isinstance(observation_space, Discrete):
             self.act_dim = action_sapce.n
-        self.ac = ActorCritic(observation_space, action_sapce, [64, 64, 64], nn.ReLU)
+        self.ac = ActorCritic(observation_space, action_sapce, [256, 256, 256], nn.ReLU)
         self.memory = VPGBuffer(self.obs_dim, self.act_dim, memory_size, gamma=gamma, lam=lam)
         self.actor_optim = Adam(self.ac.actor.parameters(), lr=actor_lr)
         self.critic_optim = Adam(self.ac.critic.parameters(), lr=critic_lr)

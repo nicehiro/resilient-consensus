@@ -8,8 +8,8 @@ from utils import writer
 
 def train():
     epochs = 10000
-    local_steps_per_epoch = 100
-    env = Env(nodes_n=10)
+    local_steps_per_epoch = 2
+    env = Env(nodes_n=10, times=1)
     agents = [Agent(node_i=i,
                     observation_space=Box(low=0, high=1, shape=[env.features_n[i],], dtype=np.float32),
                     action_sapce=Box(low=0, high=1, shape=[env.outputs_n[i]//2,], dtype=np.float32))
@@ -27,6 +27,7 @@ def train():
                 vs.append(v)
                 logps.append(logp)
                 r = env.step(a, i, is_continuous=True)
+                writer.add_scalar('Rewards/Node: {0}'.format(i), r, epoch * local_steps_per_epoch + t)
                 rews.append(r)
 
             # save
@@ -45,8 +46,8 @@ def train():
 #             if t % 10 == 0:
             actor_loss, critic_loss = agent.optimize()
             if actor_loss != 0 and critic_loss != 0:
-                writer.add_scalar('Loss/Actor', actor_loss, epoch * local_steps_per_epoch + t)
-                writer.add_scalar('Loss/Critic', critic_loss, epoch * local_steps_per_epoch + t)
+                writer.add_scalar('Loss_Actor/Node: {0}'.format(i), actor_loss, epoch * local_steps_per_epoch + t)
+                writer.add_scalar('Loss_Critic/Node: {0}'.format(i), critic_loss, epoch * local_steps_per_epoch + t)
         writer.add_scalars('Node Values', {
             'Node {0}'.format(i): env.map.nodes[i].v 
             for i in range(env.nodes_n)

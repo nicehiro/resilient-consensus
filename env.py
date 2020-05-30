@@ -141,7 +141,7 @@ class Env:
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
-        self.map, self.features_n, self.outputs_n = self.make_map()
+#         self.map, self.features_n, self.outputs_n = self.make_map()
         return self.states()
 
     def make_map(self):
@@ -183,10 +183,12 @@ class Env:
         self.map.normalize(node_i)
         # rewards
         r = 0
-        for i in range(self.nodes_n):
-            r += self.map.matrix[node_i][i] * abs(self.map.nodes[node_i].v - self.map.nodes[i].v)
-        r = math.exp(-20 * r)
-        r = (r - 0.5) / 100
+#         for i in range(self.nodes_n):
+#             r += self.map.matrix[node_i][i] * abs(self.map.nodes[node_i].v - self.map.nodes[i].v)
+        for k, v in self.map.nodes[node_i].weights.items():
+            r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
+        r = math.exp(- 10 * r)
+        r = r
         return r
 
     def update_value_of_node(self):

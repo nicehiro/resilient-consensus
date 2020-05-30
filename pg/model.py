@@ -49,13 +49,13 @@ class CategoricalActor(Actor):
 class GaussianActor(Actor):
     def __init__(self, obs_dim, act_dim, hidden_sizes, activation):
         super(GaussianActor, self).__init__()
-        self.mu = build_net([obs_dim] + hidden_sizes + [act_dim], activation, output_activation=nn.Tanh)
+        self.mu = build_net([obs_dim] + hidden_sizes + [act_dim], activation)
         log_std = -0.5 * np.ones(act_dim, dtype=np.float32)
         self.log_std = torch.nn.Parameter(torch.as_tensor(log_std))
 
     def _distribution(self, obs):
         mu = self.mu(obs)
-        mu = 1 / 2 * (mu + 1)
+#         mu = 1 / 2 * (mu + 1)
         log_std = torch.exp(self.log_std)
         return Normal(mu, log_std)
 
