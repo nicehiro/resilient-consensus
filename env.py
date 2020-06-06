@@ -209,6 +209,6 @@ class Env:
         """
         for i in range(self.nodes_n):
             for j in range(self.nodes_n):
-                if abs(self.map.nodes[i] - self.map.nodes[j]) > tolerance:
+                if abs(self.map.nodes[i].v - self.map.nodes[j].v) > tolerance:
                     return False
         return True

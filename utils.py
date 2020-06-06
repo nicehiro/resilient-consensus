@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
@@ -12,6 +13,15 @@ device = torch.device('cpu')
 
 # summary writer for tensorboard
 writer = SummaryWriter('logs')
+
+
+def normalize(data):
+    """Normalize data.
+    """
+    data = np.array(data, dtype=np.float32)
+    mean = data.mean()
+    std = np.std(data)
+    return (data - mean) / std
 
 
 def batch_train(train, n=100):
@@ -37,4 +47,4 @@ def batch_train(train, n=100):
             success_n += 1
         else:
             failed_n += 1
-    print('Test Numbers: {0}\nSuccess Numbers: {1}\tFailed Numbers: {2}'.format(n, success_n, failed_n))
+        print('Test Numbers: {0}\nSuccess Numbers: {1}\tFailed Numbers: {2}'.format(n, success_n, failed_n))

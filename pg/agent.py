@@ -6,7 +6,7 @@ import time
 from pg.model import ActorCritic
 from pg.utils import VPGBuffer
 from gym.spaces import Box, Discrete
-from utils import writer
+from utils import normalize
 
 
 class Agent:
@@ -14,9 +14,9 @@ class Agent:
                  node_i,
                  observation_space,
                  action_sapce,
-                 actor_lr=1e-4,
-                 critic_lr=1e-4,
-                 memory_size=2,
+                 actor_lr=1e-5,
+                 critic_lr=1e-5,
+                 memory_size=1,
                  train_v_iters=10,
                  gamma=0.99,
                  lam=0.95):
@@ -34,6 +34,7 @@ class Agent:
 #         writer.add_graph(self.ac, torch.zeros([1, self.obs_dim]))
 
     def act(self, obs):
+        obs = normalize(obs)
         obs = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
         return self.ac.step(obs)
 
