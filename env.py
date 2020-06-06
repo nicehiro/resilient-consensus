@@ -169,7 +169,7 @@ class Env:
         """
         # update weight
         if is_continuous:
-            action = action[0]
+            # action = action[0]
             for i in range(len(action)):
                 self.map.update_by_weight_index(node_i, i, action[i])
         else:
@@ -207,8 +207,8 @@ class Env:
     def is_done(self, tolerance):
         """Check each two node's value distance lower than a mini number.
         """
-        for i in range(self.nodes_n):
-            for j in range(self.nodes_n):
+        for i in range(3, self.nodes_n):
+            for j in range(3, self.nodes_n):
                 if abs(self.map.nodes[i].v - self.map.nodes[j].v) > tolerance:
                     return False
         return True
