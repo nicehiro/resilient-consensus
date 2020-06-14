@@ -65,7 +65,7 @@ class Map:
 
         But we only have weights index.
         """
-        self.update(node_i,
+        self.update_by_times(node_i,
                     self.weights_index[node_i][weights_i],
                     w_multi)
 
@@ -183,12 +183,9 @@ class Env:
         self.map.normalize(node_i)
         # rewards
         r = 0
-#         for i in range(self.nodes_n):
-#             r += self.map.matrix[node_i][i] * abs(self.map.nodes[node_i].v - self.map.nodes[i].v)
         for k, v in self.map.nodes[node_i].weights.items():
             r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
-        r = math.exp(- 10 * r)
-        r = r
+        r = 0.0001 * math.exp(- 10 * r)
         return r
 
     def update_value_of_node(self):

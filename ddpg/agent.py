@@ -17,12 +17,12 @@ class Agent:
                  observation_space,
                  action_space,
                  actor_lr=1e-5,
-                 critic_lr=1e-5,
-                 memory_size=1000,
+                 critic_lr=1e-4,
+                 memory_size=100,
                  gamma=0.99,
                  polyak=0.95,
                  noise_scale=0.1,
-                 batch_size=16):
+                 batch_size=4):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
         if isinstance(observation_space, Box):
@@ -30,7 +30,7 @@ class Agent:
         elif isinstance(observation_space, Discrete):
             self.act_dim = action_space.n
         self.action_space = action_space
-        self.ac = MLPActorCritic(observation_space, action_space, [256, 256, 256], nn.ReLU)
+        self.ac = MLPActorCritic(observation_space, action_space, [512, 512], nn.ReLU)
         self.ac_targ = deepcopy(self.ac)
         for p in self.ac_targ.parameters():
             p.requires_grad = False
@@ -45,8 +45,8 @@ class Agent:
 
     def act(self, obs):
         a = self.ac.act(torch.as_tensor(obs, dtype=torch.float32))
-        a += self.noise_scale * np.random.randn(self.act_dim)
-        return np.clip(a, -self.act_limit, self.act_limit)
+        # a += self.noise_scale * np.random.randn(self.act_dim)
+        return np.clip(a, 0, self.act_limit)
 
     def optimize(self):
         # Set up function for computing DDPG Q-loss
