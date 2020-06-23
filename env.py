@@ -65,7 +65,7 @@ class Map:
 
         But we only have weights index.
         """
-        self.update(node_i,
+        self.update_by_times(node_i,
                     self.weights_index[node_i][weights_i],
                     w_multi)
 
@@ -82,8 +82,6 @@ class Map:
         """Normalize node weight make them sum to 1.
         """
         s = self.matrix[node_i].sum()
-        if s is np.nan:
-            print(s)
         for i in range(self.nodes_n):
             self.matrix[node_i][i] /= s
             if self.nodes[node_i].weights.get(i):
@@ -185,12 +183,9 @@ class Env:
         self.map.normalize(node_i)
         # rewards
         r = 0
-#         for i in range(self.nodes_n):
-#             r += self.map.matrix[node_i][i] * abs(self.map.nodes[node_i].v - self.map.nodes[i].v)
         for k, v in self.map.nodes[node_i].weights.items():
             r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
-        r = r / len(self.map.nodes[node_i].weights)
-        r = math.exp(- 10 * r) if r < 0.3 else 1 - math.exp(0.1 * r)
+        r = 0.0001 * math.exp(- 10 * r)
         return r
 
     def update_value_of_node(self):

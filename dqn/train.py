@@ -1,8 +1,9 @@
 from dqn.agent import DQNAgent
 from env import Env
+from utils import writer
 
 
-def train(episodes_n=10000,
+def train(episodes_n=100,
         epochs_n=100):
     env = Env(nodes_n=10)
     agents = [DQNAgent(node_i=i,
@@ -25,12 +26,8 @@ def train(episodes_n=10000,
                 agent.memory.store(states[i], acts[i], rews[i], states_next[i])
                 if (epoch % 10 == 0):
                     loss = agent.optimize_model()
-#                 if epi % 1000 == 0 and epoch % 20 == 0:
-#                     print('Node: {0}\tEpisode: {1}\tLoss: {2}'.format(i, epi, loss))
             states = states_next
-        if epi % 1000 == 0:
-            print('Episode: {0}'.format(epi))
-            print(env.map)
-
-    print('Train finished!')
+        for i in range(10):
+            writer.add_scalars('Node {0} Weights'.format(i), {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, epi)
+        writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, epi)
     print(env.map.__str__())

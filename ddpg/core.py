@@ -70,7 +70,7 @@ class MLPActorCritic(nn.Module):
 
     def act(self, obs):
         with torch.no_grad():
-            return self.pi(obs).numpy()
+            return (self.pi(obs).numpy() + 1) / 2
 
     def save(self):
         torch.save(self.pi.state_dict(), 'actor.pkl')

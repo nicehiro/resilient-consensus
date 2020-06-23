@@ -6,6 +6,7 @@ from gym.spaces import Box
 from ddpg.agent import Agent
 from env import Env
 from torch.utils.tensorboard import SummaryWriter
+from utils import normalize
 
 
 def train():
@@ -20,12 +21,13 @@ def train():
     update_after = 0
     update_every = 2
     epochs = 1000
-    batch_size = 16
     # Prepare for interaction with environment
     total_steps = steps_per_epoch * epochs
     start_steps = 0
     o, ep_len = env.reset(), 0
     ep_ret = [0 for _ in range(10)]
+
+    print(env.map)
 
     # Main loop: collect experience in env and update/log each epoch
     for t in range(total_steps):
@@ -33,15 +35,15 @@ def train():
         # from a uniform distribution for better exploration. Afterwards,
         # use the learned policy (with some noise, via act_noise).
         acts = []
+        # [normalize(x) for x in o]
         for i, agent in enumerate(agents):
             if t > start_steps:
+                # obs = normalize(o[i])
                 a = agent.act(o[i])
             else:
                 a = agent.action_space.sample()
             acts.append(a)
 
-        for a in acts[4]:
-            print(a.item())
         rews = []
         # Step the env
         for i, agent in enumerate(agents):
@@ -51,6 +53,7 @@ def train():
         env.update_value_of_node()
         d = env.is_done(0.01)
         o_ = env.states()
+        # [normalize(x) for x in o_]
         # env.update_value_of_node()
         ep_len += 1
 
@@ -68,14 +71,13 @@ def train():
         o = o_
 
         # End of trajectory handling
-        if d or (ep_len == max_ep_len):
-            for i in range(10):
-                writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
-                writer.add_scalars('Node {0} Weights'.format(i), {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()})
-            writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, t)
-            # ac.save()
-            o, ep_len = o_, 0
-            ep_ret = [0 for _ in range(10)]
+        for i in range(10):
+            writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
+            writer.add_scalars('Node {0} Weights'.format(i), {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, t)
+        writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, t)
+        # ac.save()
+        o, ep_len = o_, 0
+        ep_ret = [0 for _ in range(10)]
 
         # Update handling
         if t >= update_after and t % update_every == 0:
@@ -84,6 +86,7 @@ def train():
                     loss_q, loss_pi = agent.optimize()
                 writer.add_scalar('Loss Q/Node {0}'.format(i), loss_q, t)
                 writer.add_scalar('Loss Pi/Node {0}'.format(i), loss_pi, t)
+    print(env.map)
 
 
 if __name__ == '__main__':

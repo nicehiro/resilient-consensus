@@ -16,9 +16,9 @@ class Agent:
                  node_i,
                  observation_space,
                  action_space,
-                 actor_lr=1e-3,
-                 critic_lr=1e-3,
-                 memory_size=1000,
+                 actor_lr=1e-5,
+                 critic_lr=1e-4,
+                 memory_size=100,
                  gamma=0.99,
                  polyak=0.95,
                  noise_scale=0.1,
@@ -30,7 +30,7 @@ class Agent:
         elif isinstance(observation_space, Discrete):
             self.act_dim = action_space.n
         self.action_space = action_space
-        self.ac = MLPActorCritic(observation_space, action_space, [256, 256, 256], nn.ReLU)
+        self.ac = MLPActorCritic(observation_space, action_space, [512, 512], nn.ReLU)
         self.ac_targ = deepcopy(self.ac)
         for p in self.ac_targ.parameters():
             p.requires_grad = False
@@ -45,7 +45,7 @@ class Agent:
 
     def act(self, obs):
         a = self.ac.act(torch.as_tensor(obs, dtype=torch.float32))
-        a += self.noise_scale * np.random.randn(self.act_dim)
+        # a += self.noise_scale * np.random.randn(self.act_dim)
         return np.clip(a, 0, self.act_limit)
 
     def optimize(self):
