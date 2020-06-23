@@ -82,6 +82,8 @@ class Map:
         """Normalize node weight make them sum to 1.
         """
         s = self.matrix[node_i].sum()
+        if s is np.nan:
+            print(s)
         for i in range(self.nodes_n):
             self.matrix[node_i][i] /= s
             if self.nodes[node_i].weights.get(i):
@@ -187,8 +189,8 @@ class Env:
 #             r += self.map.matrix[node_i][i] * abs(self.map.nodes[node_i].v - self.map.nodes[i].v)
         for k, v in self.map.nodes[node_i].weights.items():
             r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
-        r = math.exp(- 10 * r)
-        r = r
+        r = r / len(self.map.nodes[node_i].weights)
+        r = math.exp(- 10 * r) if r < 0.3 else 1 - math.exp(0.1 * r)
         return r
 
     def update_value_of_node(self):

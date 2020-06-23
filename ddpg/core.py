@@ -17,6 +17,18 @@ def mlp(sizes, activation, output_activation=nn.Identity):
         layers += [nn.Linear(sizes[j], sizes[j+1]), act()]
     return nn.Sequential(*layers)
 
+def mlp2(sizes, activation, output_activation=nn.Identity):
+    layers = []
+    for j in range(len(sizes)-1):
+        if j < len(sizes)-3:
+            act = activation
+        elif j < len(sizes)-2:
+            act = nn.Identity
+        else:
+            act = output_activation
+        layers += [nn.Linear(sizes[j], sizes[j+1]), act()]
+    return nn.Sequential(*layers)
+
 def count_vars(module):
     return sum([np.prod(p.shape) for p in module.parameters()])
 
@@ -25,7 +37,7 @@ class MLPActor(nn.Module):
     def __init__(self, obs_dim, act_dim, hidden_sizes, activation, act_limit):
         super().__init__()
         pi_sizes = [obs_dim] + list(hidden_sizes) + [act_dim]
-        self.pi = mlp(pi_sizes, activation, nn.Tanh)
+        self.pi = mlp2(pi_sizes, activation, nn.Softmax)
         self.act_limit = act_limit
 
     def forward(self, obs):

@@ -16,13 +16,13 @@ class Agent:
                  node_i,
                  observation_space,
                  action_space,
-                 actor_lr=1e-5,
-                 critic_lr=1e-5,
+                 actor_lr=1e-3,
+                 critic_lr=1e-3,
                  memory_size=1000,
                  gamma=0.99,
                  polyak=0.95,
                  noise_scale=0.1,
-                 batch_size=16):
+                 batch_size=4):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
         if isinstance(observation_space, Box):
@@ -46,7 +46,7 @@ class Agent:
     def act(self, obs):
         a = self.ac.act(torch.as_tensor(obs, dtype=torch.float32))
         a += self.noise_scale * np.random.randn(self.act_dim)
-        return np.clip(a, -self.act_limit, self.act_limit)
+        return np.clip(a, 0, self.act_limit)
 
     def optimize(self):
         # Set up function for computing DDPG Q-loss

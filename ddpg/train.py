@@ -17,13 +17,13 @@ def train():
               for i in range(10)]
     steps_per_epoch = 10
     max_ep_len = 10
-    update_after = 500
-    update_every = 3
+    update_after = 0
+    update_every = 2
     epochs = 1000
     batch_size = 16
     # Prepare for interaction with environment
     total_steps = steps_per_epoch * epochs
-    start_steps = 100
+    start_steps = 0
     o, ep_len = env.reset(), 0
     ep_ret = [0 for _ in range(10)]
 
@@ -40,6 +40,8 @@ def train():
                 a = agent.action_space.sample()
             acts.append(a)
 
+        for a in acts[4]:
+            print(a.item())
         rews = []
         # Step the env
         for i, agent in enumerate(agents):
@@ -49,7 +51,7 @@ def train():
         env.update_value_of_node()
         d = env.is_done(0.01)
         o_ = env.states()
-        env.update_value_of_node()
+        # env.update_value_of_node()
         ep_len += 1
 
         # Ignore the "done" signal if it comes from hitting the time
@@ -69,6 +71,8 @@ def train():
         if d or (ep_len == max_ep_len):
             for i in range(10):
                 writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
+                writer.add_scalars('Node {0} Weights'.format(i), {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()})
+            writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, t)
             # ac.save()
             o, ep_len = o_, 0
             ep_ret = [0 for _ in range(10)]
