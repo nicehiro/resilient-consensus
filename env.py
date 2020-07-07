@@ -14,6 +14,8 @@ class Property(Enum):
     RANDOM = 2
     # with constant value every time
     CONSTANT = 3
+    # with special intelligence every time
+    RIVAL = 4
 
 
 class Node:
@@ -25,6 +27,7 @@ class Node:
         self.weights = dict()
         # property of node
         self.property = p
+        self.rival_method = None
 
     def __calc_neighbors(self):
         return len(self.weights)
@@ -32,6 +35,9 @@ class Node:
     @property
     def neighbors_n(self):
         return len(self.weights)
+
+    def update_v(self):
+        self.v = self.rival_method()
 
 
 class Map:
@@ -66,8 +72,8 @@ class Map:
         But we only have weights index.
         """
         self.update_by_times(node_i,
-                    self.weights_index[node_i][weights_i],
-                    w_multi)
+                             self.weights_index[node_i][weights_i],
+                             w_multi)
 
     def update_by_weight(self, node_i, neigh_i, weight):
         self.nodes[node_i].weights[neigh_i] = weight
@@ -104,14 +110,22 @@ class Map:
     def states(self):
         """Get state of each node.
 
-        State contains node's value & node's weights & node's adja values.
+        if agent is good:
+            state contains node's value & node's weights & node's adja values.
+        else:
+            state contains other good agents' value.
         """
         states = [[] for _ in range(self.nodes_n)]
         for i, node in enumerate(self.nodes):
-            states[i].append(node.v)
-            for v, w in node.weights.items():
-                states[i].append(w)
-                states[i].append(self.nodes[v].v)
+            if node.property == Property.GOOD:
+                states[i].append(node.v)
+                for v, w in node.weights.items():
+                    states[i].append(w)
+                    states[i].append(self.nodes[v].v)
+            elif node.property == Property.RIVAL:
+                for node in self.nodes:
+                    if node.property == Property.GOOD:
+                        states[i].append(node.v)
         return states
 
     def __calc_weights_index(self):
@@ -132,16 +146,26 @@ class Map:
             str += '\n'
         return str
 
+    def node_val(self):
+        str = ''
+        for i, node in enumerate(self.nodes):
+            str += 'Node: {0}\tValue: {1}\n'.format(i, node.v)
+        return str
+
 
 class Env:
 
     def __init__(self, nodes_n, times=1):
         self.nodes_n = nodes_n
         self.times = times
+        self.goods_n = 7
+        self.rivals_n = 1
+        self.randoms_n = 0
+        self.constants_n = 2
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
-#         self.map, self.features_n, self.outputs_n = self.make_map()
+        # self.map, self.features_n, self.outputs_n = self.make_map()
         return self.states()
 
     def make_map(self):
@@ -160,8 +184,26 @@ class Env:
         nodes[7].weights = {0: 0.2, 1: 0.2, 4: 0.2, 6: 0.2, 7: 0.2}
         nodes[8].weights = {1: 0.25, 5: 0.25, 7: 0.25, 8: 0.25}
         nodes[9].weights = {2: 0.25, 3: 0.25, 7: 0.25, 9: 0.25}
-        features_n = [x.neighbors_n * 2 + 1 for x in nodes]
-        outputs_n = [x.neighbors_n * 2 for x in nodes]
+        # if agent is good:
+        #     feature = 2 * neighbors + 1 (self value + neighbors' value & weights)
+        #     output = 2 * neighbors (neighbors' weight action)
+        # if agent is rival:
+        #     feature = goods
+        #     output = 1 (agent)
+        features_n = []
+        outputs_n = []
+        for x in nodes:
+            if x.property == Property.GOOD:
+                features_n.append(x.neighbors_n * 2 + 1)
+                outputs_n.append(x.neighbors_n * 2)
+            elif x.property == Property.RIVAL:
+                features_n.append(self.goods_n)
+                # output self value
+                outputs_n.append(1)
+            else:
+                # doesn't need to train
+                features_n.append(-1)
+                outputs_n.append(-1)
         return Map(nodes), features_n, outputs_n
 
     def step(self, action, node_i, is_continuous=False):
@@ -182,10 +224,29 @@ class Env:
                     self.map.update_by_weight_index_and_times(node_i, i, 1.02)
         self.map.normalize(node_i)
         # rewards
+        r = self.__reward(node_i)
+        return r
+
+    def __reward(self, node_i):
+        # if node is good:
+        #     reward = f(dist(adj(node)
+        # if node is rival:
+        #     reward = f(dist(good_nodes))
         r = 0
-        for k, v in self.map.nodes[node_i].weights.items():
-            r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
-        r = 0.0001 * math.exp(- 10 * r)
+        property = self.map.nodes[node_i].property
+        if property is Property.GOOD:
+            for k, v in self.map.nodes[node_i].weights.items():
+                r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
+            r = 1 * math.exp(- 10 * r)
+        elif property is Property.RIVAL:
+            dist = 0
+            n = 0
+            for i in range(self.nodes_n):
+                for j in range(i, self.nodes_n):
+                    if self.map.nodes[i].property == self.map.nodes[j].property == Property.GOOD:
+                        dist += abs(self.map.nodes[i].v - self.map.nodes[j].v)
+                        n += 1
+            r = 1e-3 * (math.exp(dist / n) - 1)
         return r
 
     def update_value_of_node(self):
@@ -201,11 +262,15 @@ class Env:
         """
         return self.map.states()
 
-    def is_done(self, tolerance):
+    def is_done(self, tolerance=0.1):
         """Check each two node's value distance lower than a mini number.
         """
-        for i in range(3, self.nodes_n):
-            for j in range(3, self.nodes_n):
+        start = self.nodes_n - self.goods_n
+        for i in range(start, self.nodes_n):
+            for j in range(i+1, self.nodes_n):
                 if abs(self.map.nodes[i].v - self.map.nodes[j].v) > tolerance:
                     return False
         return True
+
+    def is_good(self, node_i):
+        return self.map.nodes[node_i].property == Property.GOOD

@@ -15,7 +15,7 @@ def train():
     agents = [Agent(node_i=i,
                     observation_space=Box(low=0, high=1, shape=[env.features_n[i], ], dtype=np.float32),
                     action_space=Box(low=0, high=1, shape=[env.outputs_n[i] // 2, ], dtype=np.float32))
-              for i in range(10)]
+              if env.is_good(i) else None for i in range(10)]
     steps_per_epoch = 10
     max_ep_len = 10
     update_after = 0
@@ -27,8 +27,6 @@ def train():
     o, ep_len = env.reset(), 0
     ep_ret = [0 for _ in range(10)]
 
-    print(env.map)
-
     # Main loop: collect experience in env and update/log each epoch
     for t in range(total_steps):
         # Until start_steps have elapsed, randomly sample actions
@@ -37,6 +35,9 @@ def train():
         acts = []
         # [normalize(x) for x in o]
         for i, agent in enumerate(agents):
+            if not agent:
+                acts.append(None)
+                continue
             if t > start_steps:
                 # obs = normalize(o[i])
                 a = agent.act(o[i])
@@ -47,6 +48,9 @@ def train():
         rews = []
         # Step the env
         for i, agent in enumerate(agents):
+            if not agent:
+                rews.append(None)
+                continue
             r = env.step(acts[i], i, is_continuous=True)
             rews.append(r)
             ep_ret[i] += r
@@ -64,6 +68,8 @@ def train():
 
         # Store experience to replay buffer
         for i, agent in enumerate(agents):
+            if not agent:
+                continue
             agent.memory.store(o[i], acts[i], rews[i], o_[i], d)
 
         # Super critical, easy to overlook step: make sure to update
@@ -82,11 +88,14 @@ def train():
         # Update handling
         if t >= update_after and t % update_every == 0:
             for i, agent in enumerate(agents):
+                if not agent:
+                    continue
                 for j in range(update_every):
                     loss_q, loss_pi = agent.optimize()
                 writer.add_scalar('Loss Q/Node {0}'.format(i), loss_q, t)
                 writer.add_scalar('Loss Pi/Node {0}'.format(i), loss_pi, t)
     print(env.map)
+    return env
 
 
 if __name__ == '__main__':

@@ -24,7 +24,7 @@ def normalize(data):
     return (data - mean) / std
 
 
-def batch_train(train, n=100):
+def batch_train(train, n=10):
     """Train a batch of episode, when they convergence or
     train steps get a certain number stop train.
 
@@ -34,17 +34,10 @@ def batch_train(train, n=100):
     failed_n = 0
     success_n = 0
     for i in range(n):
-        t = train().matrix
-        success = True
-        for j in range(len(t)):
-            if not success:
-                break
-            for k in range(0, 3):
-                if t[j][k] > 0.1:
-                    success = False
-                    break
-        if success:
+        env = train()
+        if env.is_done():
             success_n += 1
         else:
             failed_n += 1
+        print(env.map.node_val())
         print('Test Numbers: {0}\nSuccess Numbers: {1}\tFailed Numbers: {2}'.format(n, success_n, failed_n))

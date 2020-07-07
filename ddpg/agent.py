@@ -3,12 +3,11 @@ from copy import deepcopy
 import numpy as np
 import torch
 import torch.nn as nn
+from gym.spaces import Box, Discrete
 from torch.optim import Adam
-import time
+
 from ddpg.core import MLPActorCritic
 from ddpg.memory import ReplayBuffer
-from gym.spaces import Box, Discrete
-from utils import normalize
 
 
 class Agent:
@@ -103,5 +102,6 @@ class Agent:
                     p_targ.data.mul_(self.polyak)
                     p_targ.data.add_((1 - self.polyak) * p.data)
             return loss_q, loss_pi
+
         batch = self.memory.sample_batch(self.batch_size)
         return update(batch)

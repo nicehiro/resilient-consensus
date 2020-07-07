@@ -1,10 +1,10 @@
+import math
+import random
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-import math
-import random
 
 from dqn.model import DQN
 from dqn.utils import Memory
@@ -17,8 +17,8 @@ class DQNAgent:
                  features_n,
                  actions_n,
                  lr=0.001,
-                 memory_size=100000,
-                 batch_size=128,
+                 memory_size=10,
+                 batch_size=4,
                  gamma=0.99,
                  restore=False,
                  restore_path='./dqn/dqn.pkl'):
@@ -26,7 +26,7 @@ class DQNAgent:
         self.features_n = features_n
         self.actions_n = actions_n
         self.gamma = gamma
-        self.memory = Memory(self.features_n, self.actions_n//2, memory_size)
+        self.memory = Memory(self.features_n, self.actions_n // 2, memory_size)
         self.device = device
         self.dqn = DQN(self.features_n, self.actions_n,
                        [64, 64, 64, 64], activation=nn.ReLU)
@@ -42,7 +42,7 @@ class DQNAgent:
         self.eps_end = 0.01
         self.eps_decay = 100000
         self.need_exploit = True
-        
+
         if restore:
             self.restore()
 
@@ -60,7 +60,7 @@ class DQNAgent:
                 actions = []
                 for i in range(0, len(outputs), 2):
                     up = outputs[i].item()
-                    down = outputs[i+1].item()
+                    down = outputs[i + 1].item()
                     actions.append(0 if up > down else 1)
                     # print(actions)
                 return actions
