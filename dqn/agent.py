@@ -21,6 +21,7 @@ class DQNAgent:
                  batch_size=4,
                  gamma=0.99,
                  restore=False,
+                 need_exploit=True,
                  restore_path='./dqn/dqn.pkl'):
         self.node_i = node_i
         self.features_n = features_n
@@ -41,7 +42,7 @@ class DQNAgent:
         self.eps_start = 0.9
         self.eps_end = 0.01
         self.eps_decay = 100000
-        self.need_exploit = True
+        self.need_exploit = need_exploit
 
         if restore:
             self.restore()
