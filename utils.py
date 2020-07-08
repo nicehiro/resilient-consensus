@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from analysis.save import save_nodes_value
 
 
 if torch.cuda.is_available():
@@ -24,7 +25,7 @@ def normalize(data):
     return (data - mean) / std
 
 
-def batch_train(train, n=10):
+def batch_train(train, method='DQN', n=10):
     """Train a batch of episode, when they convergence or
     train steps get a certain number stop train.
 
@@ -41,3 +42,4 @@ def batch_train(train, n=10):
             failed_n += 1
         print(env.map.node_val())
         print('Test Numbers: {0}\nSuccess Numbers: {1}\tFailed Numbers: {2}'.format(n, success_n, failed_n))
+        save_nodes_value(env.map, method, path='data/nodes_values.csv')
