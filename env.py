@@ -27,7 +27,6 @@ class Node:
         self.weights = dict()
         # property of node
         self.property = p
-        self.rival_method = None
 
     def __calc_neighbors(self):
         return len(self.weights)
@@ -36,8 +35,14 @@ class Node:
     def neighbors_n(self):
         return len(self.weights)
 
-    def update_v(self):
-        self.v = self.rival_method()
+    def update_v(self, action):
+        """If action is 1: increase value a litter
+        If action is 0: decrease value a litter.
+        """
+        if action == 1:
+            self.v *= 1.1
+        elif action == 0:
+            self.v *= 0.9
 
 
 class Map:
@@ -106,6 +111,8 @@ class Map:
                 pass
             elif node.property == Property.RANDOM:
                 node.v = random.random()
+            elif node.property == Property.RIVAL:
+                pass
 
     def states(self):
         """Get state of each node.
@@ -177,7 +184,9 @@ class Env:
         node_constant_1 = Node(1, random.random() * self.times, Property.CONSTANT)
         node_constant_2 = Node(2, random.random() * self.times, Property.CONSTANT)
         node_constant_3 = Node(0, random.random() * self.times, Property.CONSTANT)
-        nodes = [node_random_1, node_constant_1, node_constant_2] + \
+        node_rival_1 = Node(0, random.random() * self.times, Property.RIVAL)
+        node_rival_2 = Node(1, random.random() * self.times, Property.RIVAL)
+        nodes = [node_rival_1, node_constant_1, node_constant_2] + \
                 [Node(i, random.random() * self.times, Property.GOOD) for i in range(3, self.nodes_n)]
         nodes[0].weights = {0: 1}
         nodes[1].weights = {1: 1}
@@ -189,12 +198,6 @@ class Env:
         nodes[7].weights = {0: 0.2, 1: 0.2, 4: 0.2, 6: 0.2, 7: 0.2}
         nodes[8].weights = {1: 0.25, 5: 0.25, 7: 0.25, 8: 0.25}
         nodes[9].weights = {2: 0.25, 3: 0.25, 7: 0.25, 9: 0.25}
-        # if agent is good:
-        #     feature = 2 * neighbors + 1 (self value + neighbors' value & weights)
-        #     output = 2 * neighbors (neighbors' weight action)
-        # if agent is rival:
-        #     feature = goods
-        #     output = 1 (agent)
         features_n = []
         outputs_n = []
         for x in nodes:
@@ -204,7 +207,7 @@ class Env:
             elif x.property == Property.RIVAL:
                 features_n.append(self.goods_n)
                 # output self value
-                outputs_n.append(1)
+                outputs_n.append(2)
             else:
                 # doesn't need to train
                 features_n.append(-1)
@@ -254,13 +257,16 @@ class Env:
             r = 1e-3 * (math.exp(dist / n) - 1)
         return r
 
-    def update_value_of_node(self):
+    def update_value_of_node(self, rival_action_args=None):
         """When synchronize update node, use this function when
          all node's updating finished.
          When asynchronous update node, use this function when
          each node's updating finished.
         """
         self.map.update_value_of_node()
+        if rival_action_args and type(rival_action_args) is dict:
+            for node_i, action in rival_action_args.items():
+                self.map.nodes[node_i].update_v(action)
 
     def states(self):
         """Get current states.
@@ -279,3 +285,6 @@ class Env:
 
     def is_good(self, node_i):
         return self.map.nodes[node_i].property == Property.GOOD
+
+    def is_rival(self, node_i):
+        return self.map.nodes[node_i].property == Property.RIVAL

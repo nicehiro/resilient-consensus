@@ -18,7 +18,7 @@ def train(episodes_n=100,
                        need_exploit=False,
                        batch_size=2,
                        memory_size=2)
-              if env.is_good(i) else None for i in range(env.nodes_n)]
+              if env.is_good(i) or env.is_rival(i) else None for i in range(env.nodes_n)]
     episodes_n = int(1e4)
     epochs_n = 100
     for epi in range(episodes_n):
@@ -26,8 +26,9 @@ def train(episodes_n=100,
         for epoch in range(epochs_n):
             acts = []
             rews = []
+            rival_acts = {}
             for i, agent in enumerate(agents):
-                if not agent:
+                if not env.is_good(i) and not env.is_rival(i):
                     acts.append(-1)
                     rews.append(-1)
                     continue
@@ -35,10 +36,12 @@ def train(episodes_n=100,
                 r = env.step(a, i)
                 acts.append(a)
                 rews.append(r)
-            env.update_value_of_node()
+                if env.is_rival(i):
+                    rival_acts[i] = a[0]
+            env.update_value_of_node(rival_action_args=rival_acts)
             states_next = env.states()
             for i, agent in enumerate(agents):
-                if not agent:
+                if not env.is_good(i) and not env.is_rival(i):
                     continue
                 agent.memory.store(states[i], acts[i], rews[i], states_next[i])
                 if (epoch % 10 == 0):

@@ -72,8 +72,13 @@ class DQNAgent:
             return 0.0
         data = self.memory.sample(self.batch_size)
         obs, act, rew, obs_next = data['obs'], data['act'], data['rew'], data['obs_next']
-        q_eval = self.dqn(obs).gather(1, act)
-        dim_a = act.shape[1]
+        act_t = [[] for _ in range(len(act))]
+        for i, act_ in enumerate(act):
+            for j in range(len(act_)):
+                act_t[i].append(j * 2 + act_[j].item())
+        act_t = torch.tensor(act_t)
+        q_eval = self.dqn(obs).gather(1, act_t)
+        dim_a = act_t.shape[1]
         q_eval = q_eval.sum(1) / dim_a
         q_next = self.target_dqn(obs_next).max(1)[0].detach()
         q_target = (q_next * self.gamma) + rew.squeeze()
