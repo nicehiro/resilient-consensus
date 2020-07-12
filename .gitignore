@@ -5,3 +5,5 @@ __pycache__/
 *.ipynb_checkpoints/
 logs/
 test.py
+.DS_Store
+data/

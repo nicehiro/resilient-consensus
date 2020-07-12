@@ -19,8 +19,8 @@ def train(episodes_n=100,
                        batch_size=2,
                        memory_size=2)
               if env.is_good(i) else None for i in range(env.nodes_n)]
-    episodes_n = int(1e4)
-    epochs_n = 100
+    episodes_n = int(1e3)
+    epochs_n = 10
     for epi in range(episodes_n):
         states = env.reset()
         for epoch in range(epochs_n):
@@ -41,12 +41,11 @@ def train(episodes_n=100,
                 if not agent:
                     continue
                 agent.memory.store(states[i], acts[i], rews[i], states_next[i])
-                if (epoch % 10 == 0):
+                if (epoch % 2 == 0):
                     loss = agent.optimize_model()
             states = states_next
         for i in range(10):
             writer.add_scalars('Node {0} Weights'.format(i),
                                {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, epi)
         writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, epi)
-        print(env.map.node_val())
     return env
