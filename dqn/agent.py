@@ -17,8 +17,8 @@ class DQNAgent:
                  features_n,
                  actions_n,
                  lr=0.001,
-                 memory_size=10,
-                 batch_size=4,
+                 memory_size=int(1e6),
+                 batch_size=64,
                  gamma=0.99,
                  restore=False,
                  need_exploit=True,
@@ -43,7 +43,6 @@ class DQNAgent:
         self.eps_end = 0.01
         self.eps_decay = 100000
         self.need_exploit = need_exploit
-
         if restore:
             self.restore()
 

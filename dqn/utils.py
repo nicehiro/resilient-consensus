@@ -19,7 +19,7 @@ class Memory:
         self.p = 0
 
     def __len__(self):
-        return (self.ptr) % self.size
+        return min(self.size, self.p)
 
     def store(self, obs, act, rew, obs_next):
         self.obs_buf[self.ptr] = obs
@@ -30,7 +30,7 @@ class Memory:
         self.p += 1
 
     def sample(self, sample_size=64):
-        idx = np.random.randint(0, self.size, sample_size)
+        idx = np.random.randint(0, min(self.size, self.p), sample_size)
         data = dict(obs=self.obs_buf[idx],
                     act=self.act_buf[idx],
                     rew=self.rew_buf[idx],
@@ -38,4 +38,4 @@ class Memory:
         return {k: torch.as_tensor(v, dtype=torch.long if k == 'act' else torch.float32) for k, v in data.items()}
 
     def can_sample(self):
-        return self.p >= self.size
+        return self.p >= int(1e4)

@@ -174,7 +174,7 @@ class Env:
     def reset(self):
         """If we need long time exploit, we should reset state every episode beginning.
         """
-        # self.map, self.features_n, self.outputs_n = self.make_map()
+        self.map, self.features_n, self.outputs_n = self.make_map()
         return self.states()
 
     def make_map(self):
@@ -188,7 +188,7 @@ class Env:
         node_constant_3 = Node(0, random.random() * self.times, Property.CONSTANT)
         node_rival_1 = Node(0, random.random() * self.times, Property.RIVAL)
         node_rival_2 = Node(1, random.random() * self.times, Property.RIVAL)
-        nodes = [node_rival_1, node_constant_1, node_constant_2] + \
+        nodes = [node_random_1, node_random_2, node_random_3] + \
                 [Node(i, random.random() * self.times, Property.GOOD) for i in range(3, self.nodes_n)]
         nodes[0].weights = {0: 1}
         nodes[1].weights = {1: 1}
