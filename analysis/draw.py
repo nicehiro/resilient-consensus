@@ -4,6 +4,8 @@ import math
 
 
 def draw_pie(path: str) -> None:
+    """Draw pie chart to show success rate.
+    """
     df = pd.read_csv(path, index_col=0)
     success_data = df.groupby(['label', 'method'])['success']
     total_tests = success_data.size().reset_index(name='Sum')

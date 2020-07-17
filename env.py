@@ -36,8 +36,8 @@ class Node:
         return len(self.weights)
 
     def update_v(self, action):
-        """If action is 1: increase value a litter
-        If action is 0: decrease value a litter.
+        """If action is 1: increase value a little
+        If action is 0: decrease value a little.
         """
         if action == 1:
             self.v *= 1.1
@@ -90,7 +90,7 @@ class Map:
                               weight)
 
     def normalize(self, node_i):
-        """Normalize node weight make them sum to 1.
+        """Normalizing node weights to make them sum to 1.
         """
         s = self.matrix[node_i].sum()
         for i in range(self.nodes_n):
@@ -178,6 +178,8 @@ class Env:
         return self.states()
 
     def make_map(self):
+        """Deterministic strategy now.
+        """
         node_random_1 = Node(0, random.random() * self.times, Property.RANDOM)
         node_random_2 = Node(1, random.random() * self.times, Property.RANDOM)
         node_random_3 = Node(2, random.random() * self.times, Property.RANDOM)
@@ -236,10 +238,8 @@ class Env:
         return r
 
     def __reward(self, node_i):
-        # if node is good:
-        #     reward = f(dist(adj(node)
-        # if node is rival:
-        #     reward = f(dist(good_nodes))
+        """Give agent reward.
+        """
         r = 0
         property = self.map.nodes[node_i].property
         if property is Property.GOOD:
@@ -284,7 +284,11 @@ class Env:
         return True
 
     def is_good(self, node_i):
+        """Return if agent node_i is GOOD agent.
+        """
         return self.map.nodes[node_i].property == Property.GOOD
 
     def is_rival(self, node_i):
+        """Return if agent node_i is RIVAL agent.
+        """
         return self.map.nodes[node_i].property == Property.RIVAL

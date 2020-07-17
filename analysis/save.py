@@ -6,6 +6,8 @@ from env import Map
 
 
 def save_nodes_value(data: Map, method: str, result: bool, label: str, path: str):
+    """Save trained nodes' value for analysis.
+    """
     if not os.path.exists(path):
         df = pd.DataFrame(columns=['Node{0}'.format(i) for i in range(10)] + ['method', 'success', 'label'])
     else:

@@ -31,6 +31,12 @@ def batch_train(train, method='DQN', label='1r2c', n=1000):
 
     @:param train
         a method for training
+    @:param method
+        train method description
+    @:param label
+        situation
+    @:param n
+        train times
     """
     failed_n = 0
     success_n = 0
