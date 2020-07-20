@@ -14,6 +14,7 @@ def train(episodes_n=int(1e7),
           memory_size=int(1e5),
           hidden_size=64,
           hidden_layer=4):
+    print(restore)
     env = Env(nodes_n=10)
     # if agent need_exploit, it means agent have to run more episode to train
     # and every episode should from start to train
@@ -62,4 +63,5 @@ def train(episodes_n=int(1e7),
                                {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, epi)
         writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, epi)
         writer.add_scalars('Rewards', {'{0}'.format(i): rewards[i] for i in range(10)}, epi)
+        print('Episode: {0}\tRewards: {1}'.format(epi, rewards))
     return env

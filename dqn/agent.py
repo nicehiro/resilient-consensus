@@ -47,6 +47,7 @@ class DQNAgent:
         self.eps_end = 0.01
         self.eps_decay = 100000
         self.need_exploit = need_exploit
+        self.train = train
         if restore:
             self.restore()
 

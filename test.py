@@ -7,15 +7,26 @@ from utils import batch_train
 import argparse
 
 
+def str2bool(value):
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif value.lower() in ('no', 'false', 'f', 'n', 0):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--episodes', type=int, help='Episodes times.')
     parser.add_argument('--epochs', type=int, help='Epochs times of each episode.')
-    parser.add_argument('--restore', type=bool, help='Restore trained model.')
-    parser.add_argument('--need_exploit', type=bool, help='Use random policy to exploit.')
+    parser.add_argument('--restore', type=str2bool, help='Restore trained model.')
+    parser.add_argument('--need_exploit', type=str2bool, help='Use random policy to exploit.')
     parser.add_argument('--batch_size', type=int, help='Batch size.')
     parser.add_argument('--memory_size', type=int, help='Replay buffer size.')
-    parser.add_argument('--train', type=bool, help='Optimize model.')
+    parser.add_argument('--train', type=str2bool, help='Optimize model.')
     parser.add_argument('--lr', type=float, help='Learning rate.')
     parser.add_argument('--hidden_size', type=int, help='Layer hidden size.')
     parser.add_argument('--hidden_layer', type=int, help='Hidden layer nums.')
