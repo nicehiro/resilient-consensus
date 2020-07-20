@@ -245,7 +245,7 @@ class Env:
         if property is Property.GOOD:
             for k, v in self.map.nodes[node_i].weights.items():
                 r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
-            r = 1 * math.exp(- 10 * r)
+            r = 1e-2 * math.exp(- 10 * r)
         elif property is Property.RIVAL:
             dist = 0
             n = 0

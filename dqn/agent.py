@@ -22,7 +22,9 @@ class DQNAgent:
                  gamma=0.99,
                  restore=False,
                  need_exploit=True,
-                 restore_path='./dqn/dqn.pkl'):
+                 train=True,
+                 hidden_sizes=None,
+                 restore_path='./dqn/'):
         self.node_i = node_i
         self.features_n = features_n
         self.actions_n = actions_n
@@ -30,14 +32,16 @@ class DQNAgent:
         self.memory = Memory(self.features_n, self.actions_n // 2, memory_size)
         self.device = device
         self.dqn = DQN(self.features_n, self.actions_n,
-                       [64, 64, 64, 64], activation=nn.ReLU)
+                       hidden_sizes, activation=nn.ReLU)
         self.target_dqn = DQN(self.features_n, self.actions_n,
-                              [64, 64, 64, 64], activation=nn.ReLU)
+                              hidden_sizes, activation=nn.ReLU)
+        self.dqn.to(device)
+        self.target_dqn.to(device)
         self.target_dqn.eval()
         self.target_dqn.load_state_dict(self.dqn.state_dict())
         self.optimizer = optim.Adam(self.dqn.parameters(), lr=lr)
         self.batch_size = batch_size
-        self.restore_path = restore_path
+        self.restore_path = restore_path + 'dqn-{0}.pkl'.format(node_i)
         self.steps = 0
         self.eps_start = 0.9
         self.eps_end = 0.01
@@ -55,7 +59,7 @@ class DQNAgent:
         self.steps += 1
         if sample > eps_threhold:
             with torch.no_grad():
-                state = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
+                state = torch.tensor(obs, dtype=torch.float32).to(device).unsqueeze(0)
                 outputs = self.dqn(state)
                 actions = []
                 for i in range(0, len(outputs), 2):
@@ -67,7 +71,7 @@ class DQNAgent:
         return [random.randrange(2) for _ in range(self.actions_n // 2)]
 
     def optimize_model(self):
-        if not self.memory.can_sample():
+        if not self.train or not self.memory.can_sample():
             return 0.0
         data = self.memory.sample(self.batch_size)
         obs, act, rew, obs_next = data['obs'], data['act'], data['rew'], data['obs_next']
@@ -75,11 +79,17 @@ class DQNAgent:
         for i, act_ in enumerate(act):
             for j in range(len(act_)):
                 act_t[i].append(j * 2 + act_[j].item())
-        act_t = torch.tensor(act_t)
-        q_eval = self.dqn(obs).gather(1, act_t)
+        act_t = torch.tensor(act_t).to(device)
+        q_eval = self.dqn(obs).to(device).gather(1, act_t)
         dim_a = act_t.shape[1]
         q_eval = q_eval.sum(1) / dim_a
-        q_next = self.target_dqn(obs_next).max(1)[0].detach()
+        q_next_all = self.target_dqn(obs_next).to(device)
+        q_next = [[] for _ in range(len(obs_next))]
+        for i, q_n in enumerate(q_next_all):
+            for j in range(0, len(q_n), 2):
+                q_next[i].append(q_n[j].item() if q_n[j] > q_n[j+1] else q_n[j+1].item())
+        q_next = torch.tensor(q_next).to(device)
+        q_next = q_next.sum(1) / dim_a
         q_target = (q_next * self.gamma) + rew.squeeze()
 
         loss = F.mse_loss(q_eval, q_target)

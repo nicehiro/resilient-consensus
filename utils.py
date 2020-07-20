@@ -10,7 +10,7 @@ else:
     dev = 'cpu'
     
 
-device = torch.device('cpu')
+device = torch.device(dev)
 
 # summary writer for tensorboard
 writer = SummaryWriter('logs')

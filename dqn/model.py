@@ -16,7 +16,7 @@ class DQN(nn.Module):
     def __init__(self, features_n, outputs_n, hidden_sizes, activation):
         super(DQN, self).__init__()
         sizes = [features_n] + hidden_sizes + [outputs_n]
-        self.dqn = build_net(sizes, activation, output_activation=nn.Softmax)
+        self.dqn = build_net(sizes, activation)
         
     def init_weights(self, m):
         if type(m) == nn.Linear:

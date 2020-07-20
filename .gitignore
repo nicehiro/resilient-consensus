@@ -4,6 +4,10 @@ venv/
 __pycache__/
 *.ipynb_checkpoints/
 logs/
-test.py
 .DS_Store
 data/
+trained_logs/
+nohup.out
+launch.json
+settings.json
+*.log

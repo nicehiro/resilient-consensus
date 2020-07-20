@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+from utils import device
+
 
 def combined_shape(length, shape=None):
     if shape is None:
@@ -35,7 +37,7 @@ class Memory:
                     act=self.act_buf[idx],
                     rew=self.rew_buf[idx],
                     obs_next=self.obs_next_buf[idx])
-        return {k: torch.as_tensor(v, dtype=torch.long if k == 'act' else torch.float32) for k, v in data.items()}
+        return {k: torch.as_tensor(v, dtype=torch.long if k == 'act' else torch.float32).to(device) for k, v in data.items()}
 
     def can_sample(self):
-        return self.p >= int(1e4)
+        return self.p >= int(5e4)
