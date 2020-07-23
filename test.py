@@ -30,21 +30,34 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, help='Learning rate.')
     parser.add_argument('--hidden_size', type=int, help='Layer hidden size.')
     parser.add_argument('--hidden_layer', type=int, help='Hidden layer nums.')
+    parser.add_argument('--log', type=str2bool, help='Tensorboard log file.')
+    parser.add_argument('--reset_env', type=str2bool, help='Reset env.')
+    parser.add_argument('--batch_num', type=int, default=1, help='Batch number.')
     parser.add_argument('--train_method', type=str, help='Train method. DQN, DDPG .etc.')
     args = parser.parse_args()
-    eval(args.train_method)(
-        episodes_n=args.episodes,
-        epochs_n=args.epochs,
-        restore=args.restore,
-        need_exploit=args.need_exploit,
-        batch_size=args.batch_size,
-        memory_size=args.memory_size,
-        train=args.train,
-        lr=args.lr,
-        hidden_size=args.hidden_size,
-        hidden_layer=args.hidden_layer
-    )
-    # batch_train(dqn_train, method='DQN', label='3c')
+    batch_num = args.batch_num
+    success_times = failed_times = 0
+    for _ in range(batch_num):
+        env = eval(args.train_method)(
+            episodes_n=args.episodes,
+            epochs_n=args.epochs,
+            restore=args.restore,
+            need_exploit=args.need_exploit,
+            batch_size=args.batch_size,
+            memory_size=args.memory_size,
+            train=args.train,
+            lr=args.lr,
+            hidden_size=args.hidden_size,
+            hidden_layer=args.hidden_layer,
+            log=args.log,
+            reset_env=args.reset_env
+        )
+        if env.is_done():
+            success_times += 1
+        else:
+            failed_times += 1
+    print('Success Times: {0}\tFalied Times: {1}'.format(success_times, failed_times))
+    # batch_train(dqn_train, method='DQN', label='2c')
     # pg_train()
     # ddpg_train()
     # q_consensus()

@@ -1,5 +1,4 @@
-rm opinion.log
-nohup python test.py --episodes='10000000'\
+python test.py --episodes='10000000'\
                --epochs=100\
                --restore=True\
                --need_exploit=False\
@@ -8,6 +7,8 @@ nohup python test.py --episodes='10000000'\
                --train=False\
                --lr=0.0001\
                --hidden_size=256\
-               --hidden_layer=3\
+               --hidden_layer=4\
+               --log=False\
                --train_method='dqn_train'\
-    > opinion.log &
+               --reset_env=True\
+               --batch_num=1

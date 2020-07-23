@@ -13,9 +13,11 @@ def train(episodes_n=int(1e7),
           train=True,
           memory_size=int(1e5),
           hidden_size=64,
-          hidden_layer=4):
-    print(restore)
-    env = Env(nodes_n=10)
+          hidden_layer=4,
+          log=True,
+          reset_env=True):
+    print(train)
+    env = Env(nodes_n=10, reset_env=reset_env)
     # if agent need_exploit, it means agent have to run more episode to train
     # and every episode should from start to train
     # need exploit:
@@ -27,12 +29,13 @@ def train(episodes_n=int(1e7),
                        actions_n=env.outputs_n[i],
                        lr=lr,
                        need_exploit=need_exploit,
-                       batch_size=64,
+                       batch_size=batch_size,
                        restore=restore,
                        train=train,
                        hidden_sizes=[hidden_size]*hidden_layer,
-                       memory_size=int(1e5))
+                       memory_size=memory_size)
               if env.is_good(i) else None for i in range(env.nodes_n)]
+    success_times, failed_times, = 0, 0
     for epi in range(episodes_n):
         states = env.reset()
         rewards = [0 for _ in range(10)]
@@ -55,13 +58,21 @@ def train(episodes_n=int(1e7),
                 if not agent:
                     continue
                 agent.memory.store(states[i], acts[i], rews[i], states_next[i])
-                if (epoch % 2 == 0):
+                if (epoch % 20 == 0):
                     loss = agent.optimize_model()
+                    agent.save()
             states = states_next
-        for i in range(10):
-            writer.add_scalars('Node {0} Weights'.format(i),
-                               {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, epi)
-        writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, epi)
-        writer.add_scalars('Rewards', {'{0}'.format(i): rewards[i] for i in range(10)}, epi)
-        print('Episode: {0}\tRewards: {1}'.format(epi, rewards))
+        if log:
+            for i in range(10):
+                writer.add_scalars('Node {0} Weights'.format(i),
+                                   {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, epi)
+            writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, epi)
+            writer.add_scalars('Rewards', {'{0}'.format(i): rewards[i] for i in range(10)}, epi)
+        if not train:
+            if env.is_done():
+                success_times += 1
+            else:
+                failed_times += 1
+            print('Success Times: {0}\tFailed times: {1}\tTotal Times: {2}'.format(success_times, failed_times, epi+1))
+    print(env.map.node_val())
     return env

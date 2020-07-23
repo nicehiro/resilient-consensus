@@ -162,19 +162,21 @@ class Map:
 
 class Env:
 
-    def __init__(self, nodes_n, times=1):
+    def __init__(self, nodes_n, reset_env=True, times=1):
         self.nodes_n = nodes_n
         self.times = times
         self.goods_n = 7
         self.rivals_n = 1
         self.randoms_n = 0
         self.constants_n = 2
+        self.reset_env = reset_env
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
         """If we need long time exploit, we should reset state every episode beginning.
         """
-        self.map, self.features_n, self.outputs_n = self.make_map()
+        if self.reset_env:
+            self.map, self.features_n, self.outputs_n = self.make_map()
         return self.states()
 
     def make_map(self):

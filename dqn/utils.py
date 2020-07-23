@@ -40,4 +40,4 @@ class Memory:
         return {k: torch.as_tensor(v, dtype=torch.long if k == 'act' else torch.float32).to(device) for k, v in data.items()}
 
     def can_sample(self):
-        return self.p >= int(5e4)
+        return self.p >= self.size

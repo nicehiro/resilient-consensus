@@ -100,6 +100,7 @@ class DQNAgent:
 
         if self.steps % 1000 == 0:
             self.target_dqn.load_state_dict(self.dqn.state_dict())
+            print('Trained model saved successfully!')
             self.save()
         return loss.mean()
 
