@@ -1,7 +1,6 @@
 from dqn.agent import DQNAgent
 from env import Env
-from utils import writer
-import argparse
+import utils
 
 
 def train(episodes_n=int(1e7),
@@ -15,9 +14,13 @@ def train(episodes_n=int(1e7),
           hidden_size=64,
           hidden_layer=4,
           log=True,
-          reset_env=True):
+          log_path='logs',
+          save=False,
+          reset_env=True,
+          evil_nodes_type='3r'):
+    writer = utils.summary_writer(log_path=log_path)
     print(train)
-    env = Env(nodes_n=10, reset_env=reset_env)
+    env = Env(nodes_n=10, evil_nodes_type=evil_nodes_type, reset_env=reset_env)
     # if agent need_exploit, it means agent have to run more episode to train
     # and every episode should from start to train
     # need exploit:
@@ -33,6 +36,7 @@ def train(episodes_n=int(1e7),
                        restore=restore,
                        train=train,
                        hidden_sizes=[hidden_size]*hidden_layer,
+                       save_model=save,
                        memory_size=memory_size)
               if env.is_good(i) else None for i in range(env.nodes_n)]
     success_times, failed_times, = 0, 0
@@ -60,7 +64,7 @@ def train(episodes_n=int(1e7),
                 agent.memory.store(states[i], acts[i], rews[i], states_next[i])
                 if (epoch % 20 == 0):
                     loss = agent.optimize_model()
-                    agent.save()
+                    # agent.save()
             states = states_next
         if log:
             for i in range(10):

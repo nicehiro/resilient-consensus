@@ -1,10 +1,11 @@
 from dqn.agent import DQNAgent
 from env import Env
-from utils import writer
+from utils import summary_writer
 
 
 def train(episodes_n=100,
           epochs_n=100):
+    writer = summary_writer()
     env = Env(nodes_n=10)
     # if agent need_exploit, it means agent have to run more episode to train
     # and every episode should from start to train

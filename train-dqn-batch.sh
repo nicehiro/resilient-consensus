@@ -1,5 +1,5 @@
-rm -r logs/
-rm opinion.log
+# rm -r logs/
+# rm opinion.log
 nohup python test.py --episodes='10000000'\
                --epochs=1000\
                --restore=False\
@@ -7,10 +7,15 @@ nohup python test.py --episodes='10000000'\
                --batch_size=64\
                --memory_size='1000000'\
                --train=True\
-               --lr=0.00001\
-               --hidden_size=256\
+               --lr=0.001\
+               --hidden_size=512\
                --hidden_layer=4\
                --log=True\
+               --log_path='replay-2r1c'\
+               --reset_env=True\
+               --batch_num=1\
                --train_method='dqn_train'\
-    > opinion.log &
+               --save=True\
+               --evil_nodes_type='2r1c'\
+    > opinion-2r1c.log &
 # nohup python test.py > opinion.log &

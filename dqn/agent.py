@@ -24,6 +24,7 @@ class DQNAgent:
                  need_exploit=True,
                  train=True,
                  hidden_sizes=None,
+                 save_model=False,
                  restore_path='./dqn/'):
         self.node_i = node_i
         self.features_n = features_n
@@ -48,6 +49,7 @@ class DQNAgent:
         self.eps_decay = 100000
         self.need_exploit = need_exploit
         self.train = train
+        self.save_model = save_model
         if restore:
             self.restore()
 
@@ -101,7 +103,8 @@ class DQNAgent:
         if self.steps % 1000 == 0:
             self.target_dqn.load_state_dict(self.dqn.state_dict())
             print('Trained model saved successfully!')
-            self.save()
+            if self.save_model:
+                self.save()
         return loss.mean()
 
     def save(self):

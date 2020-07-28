@@ -12,8 +12,10 @@ else:
 
 device = torch.device(dev)
 
-# summary writer for tensorboard
-writer = SummaryWriter('logs')
+
+def summary_writer(log_path='log'):
+    # summary writer for tensorboard
+    return SummaryWriter('logs')
 
 
 def normalize(data):

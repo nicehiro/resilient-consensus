@@ -3,10 +3,11 @@ from env import Env
 from pg.agent import Agent
 from gym.spaces import Box, Discrete
 import numpy as np
-from utils import writer, normalize
+from utils import summary_writer, normalize
 
 
 def train():
+    writer = summary_writer()
     epochs = 2000
     local_steps_per_epoch = 1
     env = Env(nodes_n=10, times=1)

@@ -162,7 +162,7 @@ class Map:
 
 class Env:
 
-    def __init__(self, nodes_n, reset_env=True, times=1):
+    def __init__(self, nodes_n, evil_nodes_type, reset_env=True, times=1):
         self.nodes_n = nodes_n
         self.times = times
         self.goods_n = 7
@@ -170,6 +170,8 @@ class Env:
         self.randoms_n = 0
         self.constants_n = 2
         self.reset_env = reset_env
+        self.distances = [0 for _ in range(self.nodes_n)]
+        self.evil_nodes_type = evil_nodes_type
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
@@ -177,6 +179,7 @@ class Env:
         """
         if self.reset_env:
             self.map, self.features_n, self.outputs_n = self.make_map()
+        self.distances = [self.__calc_distance(i) for i in range(self.nodes_n)]
         return self.states()
 
     def make_map(self):
@@ -190,7 +193,15 @@ class Env:
         node_constant_3 = Node(0, random.random() * self.times, Property.CONSTANT)
         node_rival_1 = Node(0, random.random() * self.times, Property.RIVAL)
         node_rival_2 = Node(1, random.random() * self.times, Property.RIVAL)
-        nodes = [node_random_1, node_random_2, node_random_3] + \
+        if self.evil_nodes_type == '3r':
+            evil_nodes = [node_random_1, node_random_2, node_random_3]
+        elif self.evil_nodes_type == '2r1c':
+            evil_nodes = [node_random_1, node_random_2, node_constant_2]
+        elif self.evil_nodes_type == '1r2c':
+            evil_nodes = [node_random_1, node_constant_1, node_constant_2]
+        elif self.evil_nodes_type == '3c':
+            evil_nodes = [node_constant_3, node_constant_1, node_constant_2]
+        nodes = evil_nodes + \
                 [Node(i, random.random() * self.times, Property.GOOD) for i in range(3, self.nodes_n)]
         nodes[0].weights = {0: 1}
         nodes[1].weights = {1: 1}
@@ -245,9 +256,9 @@ class Env:
         r = 0
         property = self.map.nodes[node_i].property
         if property is Property.GOOD:
-            for k, v in self.map.nodes[node_i].weights.items():
-                r += abs(self.map.nodes[node_i].v - self.map.nodes[k].v)
-            r = 1e-2 * math.exp(- 10 * r)
+            d = self.__calc_distance(node_i)
+            r = 1e-2 * (self.distances[node_i] - d)
+            self.distances[node_i] = d
         elif property is Property.RIVAL:
             dist = 0
             n = 0
@@ -258,6 +269,14 @@ class Env:
                         n += 1
             r = 1e-3 * (math.exp(dist / n) - 1)
         return r
+
+    def __calc_distance(self, node_i):
+        """Calc distance of node_i with other connected nodes.
+        """
+        d = 0
+        for k, v in self.map.nodes[node_i].weights.items():
+            d += (self.map.nodes[node_i].v - self.map.nodes[k].v) ** 2
+        return math.sqrt(d)
 
     def update_value_of_node(self, rival_action_args=None):
         """When synchronize update node, use this function when

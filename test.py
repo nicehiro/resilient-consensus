@@ -31,8 +31,11 @@ if __name__ == '__main__':
     parser.add_argument('--hidden_size', type=int, help='Layer hidden size.')
     parser.add_argument('--hidden_layer', type=int, help='Hidden layer nums.')
     parser.add_argument('--log', type=str2bool, help='Tensorboard log file.')
+    parser.add_argument('--log_path', type=str, help='Tensorboard log file path.')
     parser.add_argument('--reset_env', type=str2bool, help='Reset env.')
     parser.add_argument('--batch_num', type=int, default=1, help='Batch number.')
+    parser.add_argument('--save', type=str2bool, help='Save trained model.')
+    parser.add_argument('--evil_nodes_type', type=str, help='Evil nodes type. 3r, 2r1c, 1r2c etc.')
     parser.add_argument('--train_method', type=str, help='Train method. DQN, DDPG .etc.')
     args = parser.parse_args()
     batch_num = args.batch_num
@@ -50,13 +53,16 @@ if __name__ == '__main__':
             hidden_size=args.hidden_size,
             hidden_layer=args.hidden_layer,
             log=args.log,
-            reset_env=args.reset_env
+            log_path=args.log_path,
+            reset_env=args.reset_env,
+            save=args.save,
+            evil_nodes_type=args.evil_nodes_type
         )
         if env.is_done():
             success_times += 1
         else:
             failed_times += 1
-    print('Success Times: {0}\tFalied Times: {1}'.format(success_times, failed_times))
+        print('Success Times: {0}\tFalied Times: {1}'.format(success_times, failed_times))
     # batch_train(dqn_train, method='DQN', label='2c')
     # pg_train()
     # ddpg_train()
