@@ -11,3 +11,4 @@ nohup.out
 launch.json
 settings.json
 *.log
+*logs/

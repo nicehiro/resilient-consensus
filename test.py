@@ -3,6 +3,7 @@ from pg.train import train as pg_train
 from ddpg.train import train as ddpg_train
 from q_new.train import q_consensus
 from rival.train import train as rival_dqn_train
+from maddpg.train import train as maddpg_train
 from utils import batch_train
 import argparse
 
@@ -28,6 +29,9 @@ if __name__ == '__main__':
     parser.add_argument('--memory_size', type=int, help='Replay buffer size.')
     parser.add_argument('--train', type=str2bool, help='Optimize model.')
     parser.add_argument('--lr', type=float, help='Learning rate.')
+    parser.add_argument('--actor_lr', type=float, help='Actor network learning rate.')
+    parser.add_argument('--critic_lr', type=float, help='Critic network learning rate.')
+    parser.add_argument('--noise_scale', type=float, help='Noise scale.')
     parser.add_argument('--hidden_size', type=int, help='Layer hidden size.')
     parser.add_argument('--hidden_layer', type=int, help='Hidden layer nums.')
     parser.add_argument('--log', type=str2bool, help='Tensorboard log file.')
@@ -50,6 +54,8 @@ if __name__ == '__main__':
             memory_size=args.memory_size,
             train=args.train,
             lr=args.lr,
+            actor_lr=args.actor_lr,
+            critic_lr=args.critic_lr,
             hidden_size=args.hidden_size,
             hidden_layer=args.hidden_layer,
             log=args.log,

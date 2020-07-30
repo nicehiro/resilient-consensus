@@ -257,8 +257,9 @@ class Env:
         property = self.map.nodes[node_i].property
         if property is Property.GOOD:
             d = self.__calc_distance(node_i)
-            r = 1e-2 * (self.distances[node_i] - d)
-            self.distances[node_i] = d
+            # r = 1e-2 * (self.distances[node_i] - d)
+            # self.distances[node_i] = d
+            r = 1 * (math.exp(-1 * d) - 0.9)
         elif property is Property.RIVAL:
             dist = 0
             n = 0
@@ -274,9 +275,10 @@ class Env:
         """Calc distance of node_i with other connected nodes.
         """
         d = 0
+        n = len(self.map.nodes[node_i].weights)
         for k, v in self.map.nodes[node_i].weights.items():
             d += (self.map.nodes[node_i].v - self.map.nodes[k].v) ** 2
-        return math.sqrt(d)
+        return math.sqrt(d / n)
 
     def update_value_of_node(self, rival_action_args=None):
         """When synchronize update node, use this function when
