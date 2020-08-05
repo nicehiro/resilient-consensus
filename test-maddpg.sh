@@ -1,8 +1,7 @@
-rm -rf maddpg-logs/
-rm opinion-maddpg-$1.log
+rm opinion-maddpg-$1-test.log
 
 nohup python test.py\
-    --episodes='10000000'\
+    --episodes='1'\
     --epochs=1000\
     --restore=False\
     --memory_size='1000000'\
@@ -11,12 +10,12 @@ nohup python test.py\
     --critic_lr=0.001\
     --hidden_size=512\
     --hidden_layer=3\
-    --log_path=maddpg-$1-logs\
+    --log_path='maddpg-logs'\
     --reset_env=True\
-    --batch_num=1\
+    --batch_num=1000\
     --train_method='maddpg_train'\
-    --train=True\
+    --train=False\
     --save=True\
     --evil_nodes_type=$1\
-    --tolerance=0.01\
-    > opinion-maddpg-$1.log &
+    --tolerance=0.05\
+    > opinion-maddpg-$1-test.log &

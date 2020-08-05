@@ -41,10 +41,13 @@ if __name__ == '__main__':
     parser.add_argument('--save', type=str2bool, help='Save trained model.')
     parser.add_argument('--evil_nodes_type', type=str, help='Evil nodes type. 3r, 2r1c, 1r2c etc.')
     parser.add_argument('--train_method', type=str, help='Train method. DQN, DDPG .etc.')
+    parser.add_argument('--tolerance', type=float, help='Done tolerance.')
     args = parser.parse_args()
     batch_num = args.batch_num
+    tolerance = args.tolerance
     success_times = failed_times = 0
-    for _ in range(batch_num):
+    for i in range(batch_num):
+        print('Train Times: {0}'.format(i))
         env = eval(args.train_method)(
             episodes_n=args.episodes,
             epochs_n=args.epochs,
@@ -62,9 +65,10 @@ if __name__ == '__main__':
             log_path=args.log_path,
             reset_env=args.reset_env,
             save=args.save,
-            evil_nodes_type=args.evil_nodes_type
+            evil_nodes_type=args.evil_nodes_type,
+            tolerance=tolerance
         )
-        if env.is_done():
+        if env.is_done(tolerance):
             success_times += 1
         else:
             failed_times += 1

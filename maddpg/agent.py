@@ -20,12 +20,15 @@ class Agent:
                  memory_size=100,
                  gamma=0.99,
                  polyak=0.95,
+                 train=True,
                  noise_scale=0.1,
                  batch_size=4,
                  hidden_size=64,
                  hidden_layers=4,
+                 restore_path='./models/',
                  X_dim=0,
-                 A_dim=0):
+                 A_dim=0,
+                 evil_nodes_type='3r'):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
         if isinstance(observation_space, Box):
@@ -42,6 +45,8 @@ class Agent:
         self.q_optimizer = Adam(self.ac.q.parameters(), lr=critic_lr)
         self.gamma = gamma
         self.polyak = polyak
+        self.train = train
+        self.restore_path = restore_path + '{0}/{1}.pkl'.format(evil_nodes_type, node_i)
         self.noise_scale = noise_scale
         self.act_limit = action_space.high[0]
         self.batch_size = batch_size
@@ -116,3 +121,13 @@ class Agent:
 
         batch = self.memory.sample_batch(self.batch_size)
         return update(batch)
+
+    def save(self):
+        print('Save model: {0} Success!'.format(self.restore_path))
+        torch.save(self.ac_targ.state_dict(), self.restore_path)
+
+    def restore(self):
+        print('Load model: {0} Success!'.format(self.restore_path))
+        params = torch.load(self.restore_path)
+        self.ac_targ.load_state_dict(params)
+        self.ac.load_state_dict(params)
