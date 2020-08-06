@@ -1,7 +1,7 @@
 from dqn.train import train as dqn_train
 from pg.train import train as pg_train
 from ddpg.train import train as ddpg_train
-from q_new.train import q_consensus
+from q_new.train import q_consensus as q_new
 from rival.train import train as rival_dqn_train
 from maddpg.train import train as maddpg_train
 from utils import batch_train
@@ -72,6 +72,7 @@ if __name__ == '__main__':
             success_times += 1
         else:
             failed_times += 1
+        print(env.map)
         print('Success Times: {0}\tFalied Times: {1}'.format(success_times, failed_times))
     # batch_train(dqn_train, method='DQN', label='2c')
     # pg_train()

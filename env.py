@@ -46,10 +46,11 @@ class Node:
 
 
 class Map:
-    def __init__(self, nodes: List[Node]):
+    def __init__(self, nodes: List[Node], times=1):
         """Map contains a lot of Nodes.
         """
         self.nodes = nodes
+        self.times = times
         self.nodes_n = len(nodes)
         self.matrix = self.__adja_matrix()
         self.weights_index = [[] for _ in range(self.nodes_n)]
@@ -110,7 +111,7 @@ class Map:
             elif node.property == Property.CONSTANT:
                 pass
             elif node.property == Property.RANDOM:
-                node.v = random.random()
+                node.v = random.random() * self.times
             elif node.property == Property.RIVAL:
                 pass
 
@@ -227,7 +228,7 @@ class Env:
                 # doesn't need to train
                 features_n.append(-1)
                 outputs_n.append(-1)
-        return Map(nodes), features_n, outputs_n
+        return Map(nodes, times=self.times), features_n, outputs_n
 
     def step(self, action, node_i, is_continuous=False):
         """Update node_i's weights.

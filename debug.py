@@ -11,7 +11,8 @@ import argparse
 if __name__ == '__main__':
     # dqn_train(restore=False, need_exploit=True, train=True, hidden_layer=3, hidden_size=256,
     #           batch_size=2, memory_size=2, reset_env=False)
-    maddpg_train()
+    # maddpg_train()
+    q_consensus(reset_env=False, evil_nodes_type='3r')
     # batch_train(dqn_train, method='DQN', label='3c')
     # pg_train()
     # ddpg_train()

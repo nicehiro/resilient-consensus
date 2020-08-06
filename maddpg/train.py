@@ -142,7 +142,6 @@ def train(episodes_n=int(1e7),
                     writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
                     writer.add_scalars('Node {0} Weights'.format(i), {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, t)
                 writer.add_scalars('Nodes', {'{0}'.format(i): env.map.nodes[i].v for i in range(10)}, t)
-                print(env.map.node_val())
                 break
 
             if not train:
