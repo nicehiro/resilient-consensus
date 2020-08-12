@@ -6,8 +6,10 @@ import torch.nn as nn
 from gym.spaces import Box, Discrete
 from torch.optim import Adam
 
-from maddpg.core import MLPActorCritic
-from maddpg.memory import ReplayBuffer
+from env import Property
+
+from rival.maddpg_vs_maddpg.core import MLPActorCritic
+from rival.maddpg_vs_maddpg.memory import ReplayBuffer
 
 
 class Agent:
@@ -28,7 +30,8 @@ class Agent:
                  restore_path='./models/',
                  X_dim=0,
                  A_dim=0,
-                 evil_nodes_type='3r'):
+                 evil_nodes_type='3r',
+                 property=Property.GOOD):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
         if isinstance(observation_space, Box):
@@ -50,6 +53,7 @@ class Agent:
         self.noise_scale = noise_scale
         self.act_limit = action_space.high[0]
         self.batch_size = batch_size
+        self.property = property
         if not self.train:
             self.restore()
 
@@ -125,6 +129,8 @@ class Agent:
                     p_targ.data.add_((1 - self.polyak) * p.data)
             return loss_q, loss_pi
 
+        if not self.train:
+            return 0, 0
         batch = self.memory.sample_batch(self.batch_size)
         return update(batch)
 

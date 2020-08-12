@@ -16,6 +16,8 @@ class Property(Enum):
     CONSTANT = 3
     # with special intelligence every time
     RIVAL = 4
+    # with maddpg agent
+    MADDPG = 5
 
 
 class Node:
@@ -43,6 +45,9 @@ class Node:
             self.v *= 1.1
         elif action == 0:
             self.v *= 0.9
+
+    def update_v_directly(self, value):
+        self.v = value
 
 
 class Map:
@@ -93,11 +98,23 @@ class Map:
     def normalize(self, node_i):
         """Normalizing node weights to make them sum to 1.
         """
-        s = self.matrix[node_i].sum()
+        s = self.matrix[node_i].sum() - self.matrix[node_i][node_i]
+        l = len(self.nodes[node_i].weights)
+        base_w = 1 / l
+        others_w = 1 - base_w
         for i in range(self.nodes_n):
-            self.matrix[node_i][i] /= s
+            if i == node_i:
+                self.matrix[node_i][i] = base_w
+                self.nodes[node_i].weights[i] = base_w
+                continue
+            self.matrix[node_i][i] = self.matrix[node_i][i] * others_w / s
             if self.nodes[node_i].weights.get(i):
-                self.nodes[node_i].weights[i] /= s
+                self.nodes[node_i].weights[i] = self.nodes[node_i].weights[i] * others_w / s
+                
+    def update_value_directly(self, node_i, value):
+        """Update node_i value directly.
+        """
+        self.nodes[node_i].update_v_directly(value)
 
     def update_value_of_node(self):
         """Update value of every node.
@@ -113,6 +130,8 @@ class Map:
             elif node.property == Property.RANDOM:
                 node.v = random.random() * self.times
             elif node.property == Property.RIVAL:
+                pass
+            elif node.property == Property.MADDPG:
                 pass
 
     def states(self):
@@ -134,6 +153,9 @@ class Map:
                 for node in self.nodes:
                     if node.property == Property.GOOD:
                         states[i].append(node.v)
+            elif node.property == Property.MADDPG:
+                for v, w in node.weights.items():
+                    states[i].append(self.nodes[v].v)
         return states
 
     def __calc_weights_index(self):
@@ -194,6 +216,9 @@ class Env:
         node_constant_3 = Node(0, random.random() * self.times, Property.CONSTANT)
         node_rival_1 = Node(0, random.random() * self.times, Property.RIVAL)
         node_rival_2 = Node(1, random.random() * self.times, Property.RIVAL)
+        node_maddpg_0 = Node(0, random.random() * self.times, Property.MADDPG)
+        node_maddpg_1 = Node(1, random.random() * self.times, Property.MADDPG)
+        node_maddpg_2 = Node(2, random.random() * self.times, Property.MADDPG)
         if self.evil_nodes_type == '3r':
             evil_nodes = [node_random_1, node_random_2, node_random_3]
         elif self.evil_nodes_type == '2r1c':
@@ -202,21 +227,23 @@ class Env:
             evil_nodes = [node_random_1, node_constant_1, node_constant_2]
         elif self.evil_nodes_type == '3c':
             evil_nodes = [node_constant_3, node_constant_1, node_constant_2]
+        elif self.evil_nodes_type == 'maddpg':
+            evil_nodes = [node_maddpg_0, node_maddpg_1, node_maddpg_2]
         nodes = evil_nodes + \
                 [Node(i, random.random() * self.times, Property.GOOD) for i in range(3, self.nodes_n)]
-        nodes[0].weights = {0: 1}
-        nodes[1].weights = {1: 1}
-        nodes[2].weights = {2: 1}
-        nodes[3].weights = {1: 0.25, 3: 0.25, 5: 0.25, 9: 0.25}
-        nodes[4].weights = {2: 0.25, 4: 0.25, 6: 0.25, 8: 0.25}
-        nodes[5].weights = {2: 0.33, 5: 0.33, 7: 0.33}
-        nodes[6].weights = {0: 0.25, 3: 0.25, 4: 0.25, 6: 0.25}
-        nodes[7].weights = {0: 0.2, 1: 0.2, 4: 0.2, 6: 0.2, 7: 0.2}
-        nodes[8].weights = {1: 0.25, 5: 0.25, 7: 0.25, 8: 0.25}
+        nodes[0].weights = {0: 1, 6: 0, 7: 0}
+        nodes[1].weights = {1: 1, 3: 0, 7: 0, 8: 0}
+        nodes[2].weights = {2: 1, 3: 0, 4: 0, 5: 0, 9: 0}
+        nodes[3].weights = {1: 0.2, 3: 0.2, 5: 0.2, 6: 0.2, 9: 0.2}
+        nodes[4].weights = {2: 0.2, 4: 0.2, 6: 0.2, 7: 0.2, 8: 0.2}
+        nodes[5].weights = {2: 0.2, 3: 0.2, 5: 0.2, 7: 0.2, 8: 0.2}
+        nodes[6].weights = {0: 0.2, 3: 0.2, 4: 0.2, 6: 0.2, 7: 0.2}
+        nodes[7].weights = {0: 0.125, 1: 0.125, 4: 0.125, 5: 0.125, 6: 0.125, 7: 0.125, 8: 0.125, 9: 0.125}
+        nodes[8].weights = {1: 0.2, 4: 0.2, 5: 0.2, 7: 0.2, 8: 0.2}
         nodes[9].weights = {2: 0.25, 3: 0.25, 7: 0.25, 9: 0.25}
         features_n = []
         outputs_n = []
-        for x in nodes:
+        for i, x in enumerate(nodes):
             if x.property == Property.GOOD:
                 features_n.append(x.neighbors_n * 2 + 1)
                 outputs_n.append(x.neighbors_n * 2)
@@ -224,29 +251,36 @@ class Env:
                 features_n.append(self.goods_n)
                 # output self value
                 outputs_n.append(2)
+            elif x.property == Property.MADDPG:
+                features_n.append(x.neighbors_n)
+                # output self value
+                outputs_n.append(1)
             else:
                 # doesn't need to train
                 features_n.append(-1)
                 outputs_n.append(-1)
         return Map(nodes, times=self.times), features_n, outputs_n
 
-    def step(self, action, node_i, is_continuous=False):
+    def step(self, action, node_i, is_continuous=False, update_value=False):
         """Update node_i's weights.
         """
-        # update weight
-        if is_continuous:
-            # action = action[0]
-            for i in range(len(action)):
-                self.map.update_by_weight_index(node_i, i, action[i])
+        if update_value:
+            self.map.update_value_directly(node_i, action.item())
         else:
-            for i in range(len(action)):
-                if action[i] == 1:
-                    # down
-                    self.map.update_by_weight_index_and_times(node_i, i, 0.98)
-                else:
-                    # up
-                    self.map.update_by_weight_index_and_times(node_i, i, 1.02)
-        self.map.normalize(node_i)
+            # update weight
+            if is_continuous:
+                # action = action[0]
+                for i in range(len(action)):
+                    self.map.update_by_weight_index(node_i, i, action[i])
+            else:
+                for i in range(len(action)):
+                    if action[i] == 1:
+                        # down
+                        self.map.update_by_weight_index_and_times(node_i, i, 0.98)
+                    else:
+                        # up
+                        self.map.update_by_weight_index_and_times(node_i, i, 1.02)
+            self.map.normalize(node_i)
         # rewards
         r = self.__reward(node_i)
         return r
@@ -260,7 +294,10 @@ class Env:
             d = self.__calc_distance(node_i)
             # r = 1e-2 * (self.distances[node_i] - d)
             # self.distances[node_i] = d
-            r = 1 * (math.exp(-1 * d) - 0.9)
+            r = 1e-3 * (math.exp(-1 * d) - 0.9)
+        elif property is Property.MADDPG:
+            d = self.__calc_distance(node_i)
+            r = 1e-3 * (math.exp(1 * d) - 0.9)
         elif property is Property.RIVAL:
             dist = 0
             n = 0

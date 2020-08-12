@@ -6,8 +6,9 @@ import torch.nn as nn
 from gym.spaces import Box, Discrete
 from torch.optim import Adam
 
-from maddpg.core import MLPActorCritic
-from maddpg.memory import ReplayBuffer
+from rival.qnew_vs_maddpg.core import MLPActorCritic
+from rival.qnew_vs_maddpg.memory import ReplayBuffer
+from env import Property
 
 
 class Agent:
@@ -28,6 +29,7 @@ class Agent:
                  restore_path='./models/',
                  X_dim=0,
                  A_dim=0,
+                 property=Property.GOOD,
                  evil_nodes_type='3r'):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
@@ -50,6 +52,7 @@ class Agent:
         self.noise_scale = noise_scale
         self.act_limit = action_space.high[0]
         self.batch_size = batch_size
+        self.property = property
         if not self.train:
             self.restore()
 
@@ -95,8 +98,8 @@ class Agent:
             self.q_optimizer.zero_grad()
             loss_q, loss_info = compute_loss_q(data)
             loss_q.backward()
-            nn.utils.clip_grad_value_(self.ac.pi.parameters(), clip_value=0.5)
-            nn.utils.clip_grad_value_(self.ac.q.parameters(), clip_value=0.5)
+            nn.utils.clip_grad_value_(self.ac.pi.parameters, clip_value=0.5)
+            nn.utils.clip_grad_value_(self.ac.q.parameters, clip_value=0.5)
             self.q_optimizer.step()
 
             # Freeze Q-network so you don't waste computational effort
@@ -108,8 +111,8 @@ class Agent:
             self.pi_optimizer.zero_grad()
             loss_pi = compute_loss_pi(data)
             loss_pi.backward()
-            nn.utils.clip_grad_value_(self.ac.pi.parameters(), clip_value=0.5)
-            nn.utils.clip_grad_value_(self.ac.q.parameters(), clip_value=0.5)
+            nn.utils.clip_grad_value_(self.ac.pi.parameters, clip_value=0.5)
+            nn.utils.clip_grad_value_(self.ac.q.parameters, clip_value=0.5)
             self.pi_optimizer.step()
 
             # Unfreeze Q-network so you can optimize it at next DDPG step.
@@ -126,6 +129,8 @@ class Agent:
             return loss_q, loss_pi
 
         batch = self.memory.sample_batch(self.batch_size)
+        if self.train:
+            self.save()
         return update(batch)
 
     def save(self):

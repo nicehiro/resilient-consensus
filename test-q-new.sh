@@ -5,5 +5,5 @@ nohup python test.py\
     --batch_num=1000\
     --train_method='q_new'\
     --evil_nodes_type=$1\
-    --tolerance=50\
+    --tolerance=10\
     > opinion-q-new-$1-test.log &

@@ -1,5 +1,5 @@
-rm -rf maddpg-$1-logs/
-rm opinion-maddpg-$1.log
+rm -rf qnew-vs-maddpg-logs/
+rm opinion-qnew-vs-maddpg.log
 
 nohup python test.py\
     --episodes='300'\
@@ -7,17 +7,17 @@ nohup python test.py\
     --restore=False\
     --memory_size='1000000'\
     --batch_size=1024\
-    --actor_lr=0.00001\
-    --critic_lr=0.0001\
+    --actor_lr=0.0001\
+    --critic_lr=0.001\
     --hidden_size=512\
     --hidden_layer=3\
-    --log_path=maddpg-$1-logs\
+    --log_path=qnew-vs-maddpg-logs\
     --reset_env=True\
     --batch_num=1\
-    --train_method='maddpg_train'\
+    --train_method='rival_qnew'\
     --train=True\
     --save=True\
-    --evil_nodes_type=$1\
-    --tolerance=0.01\
+    --evil_nodes_type='maddpg'\
     --polyak=0.99\
-    > opinion-maddpg-$1.log &
+    --tolerance=0.05\
+    > opinion-qnew-vs-maddpg.log &

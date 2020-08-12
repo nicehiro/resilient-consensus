@@ -37,7 +37,7 @@ class MLPActor(nn.Module):
     def __init__(self, obs_dim, act_dim, hidden_sizes, activation, act_limit):
         super().__init__()
         pi_sizes = [obs_dim] + list(hidden_sizes) + [act_dim]
-        self.pi = mlp(pi_sizes, activation)
+        self.pi = mlp(pi_sizes, activation, nn.Tanh)
         self.act_limit = act_limit
 
     def forward(self, obs):
@@ -71,7 +71,6 @@ class MLPActorCritic(nn.Module):
     def act(self, obs):
         with torch.no_grad():
             return (self.pi(obs).numpy() + 1) / 2
-            # return self.pi(obs).numpy()
 
     def save(self):
         torch.save(self.pi.state_dict(), 'actor.pkl')

@@ -2,8 +2,9 @@ from dqn.train import train as dqn_train
 from pg.train import train as pg_train
 from ddpg.train import train as ddpg_train
 from q_new.train import q_consensus as q_new
-from rival.train import train as rival_dqn_train
 from maddpg.train import train as maddpg_train
+from rival.maddpg_vs_maddpg.train import train as rival_maddpg
+from rival.qnew_vs_maddpg.train import train as rival_qnew
 from utils import batch_train
 import argparse
 
@@ -31,6 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, help='Learning rate.')
     parser.add_argument('--actor_lr', type=float, help='Actor network learning rate.')
     parser.add_argument('--critic_lr', type=float, help='Critic network learning rate.')
+    parser.add_argument('--polyak', type=float, help='Update net params.')
     parser.add_argument('--noise_scale', type=float, help='Noise scale.')
     parser.add_argument('--hidden_size', type=int, help='Layer hidden size.')
     parser.add_argument('--hidden_layer', type=int, help='Hidden layer nums.')
@@ -66,13 +68,15 @@ if __name__ == '__main__':
             reset_env=args.reset_env,
             save=args.save,
             evil_nodes_type=args.evil_nodes_type,
-            tolerance=tolerance
+            tolerance=tolerance,
+            polyak=args.polyak,
+            noise_scale=args.noise_scale,
         )
         if env.is_done(tolerance):
             success_times += 1
         else:
             failed_times += 1
-        print(env.map)
+            print(env.map)
         print('Success Times: {0}\tFalied Times: {1}'.format(success_times, failed_times))
     # batch_train(dqn_train, method='DQN', label='2c')
     # pg_train()

@@ -4,18 +4,19 @@ import torch
 import numpy as np
 from gym.spaces import Box
 
-from maddpg.agent import Agent
+from copy import deepcopy
+
+from rival.maddpg_vs_maddpg.agent import Agent
 from env import Env, Property
 from torch.utils.tensorboard import SummaryWriter
-from utils import normalize
 
 
-def train(episodes_n=int(1e7),
+def train(episodes_n=int(300),
           epochs_n=100,
           lr=1e-4,
-          actor_lr=1e-5,
-          critic_lr=1e-4,
-          polyak=0.9,
+          actor_lr=1e-4,
+          critic_lr=1e-3,
+          polyak=0.95,
           noise_scale=0.1,
           restore=False,
           need_exploit=True,
@@ -26,7 +27,7 @@ def train(episodes_n=int(1e7),
           hidden_layer=4,
           tolerance=0.01,
           log=True,
-          log_path='maddpg-3r-logs',
+          log_path='maddpg-vs-maddpg-logs',
           save=False,
           reset_env=True,
           evil_nodes_type='3r'):
@@ -40,6 +41,11 @@ def train(episodes_n=int(1e7),
                 if j != i and env.map.nodes[j].property == Property.GOOD:
                     X_dims[i] += env.features_n[j]
                     A_dims[i] += env.outputs_n[j] // 2
+        elif node.property == Property.MADDPG:
+            for j, node_ in enumerate(env.map.nodes):
+                if j != i and env.map.nodes[j].property == Property.MADDPG:
+                    X_dims[i] += env.features_n[j]
+                    A_dims[i] += env.outputs_n[j]
         else:
             continue
     agents = [Agent(node_i=i,
@@ -51,11 +57,27 @@ def train(episodes_n=int(1e7),
                     batch_size=batch_size,
                     noise_scale=noise_scale,
                     polyak=polyak,
+                    train=False,
                     X_dim=X_dims[i],
                     A_dim=A_dims[i],
-                    train=train,
-                    evil_nodes_type=evil_nodes_type)
-              if env.is_good(i) else None for i in range(10)]
+                    evil_nodes_type=evil_nodes_type,
+                    property=Property.GOOD)
+                if env.is_good(i) else
+             Agent(node_i=i,
+                   observation_space=Box(low=0, high=1, shape=[env.features_n[i], ], dtype=np.float32),
+                   action_space=Box(low=0, high=1, shape=[env.outputs_n[1], ], dtype=np.float32),
+                   actor_lr=actor_lr,
+                   critic_lr=critic_lr,
+                   memory_size=memory_size,
+                   batch_size=batch_size,
+                   noise_scale=noise_scale,
+                   polyak=polyak,
+                   train=train,
+                   X_dim=X_dims[i],
+                   A_dim=A_dims[i],
+                   evil_nodes_type=evil_nodes_type,
+                   property=Property.MADDPG)
+               for i in range(10)]
     update_after = 10000
     update_every = 10
     # Prepare for interaction with environment
@@ -76,22 +98,25 @@ def train(episodes_n=int(1e7),
             # from a uniform distribution for better exploration. Afterwards,
             # use the learned policy (with some noise, via act_noise).
             acts = []
-            acts_ = []
+            acts_targ = []
             # [normalize(x) for x in o]
             for i, agent in enumerate(agents):
                 if not agent:
                     acts.append(None)
-                    acts_.append(None)
+                    acts_targ.append(None)
                     continue
-                if t > start_steps:
-                    # obs = normalize(o[i])
+                if agent.property is Property.GOOD:
                     a = agent.act(o[i])
-                else:
-                    a = agent.action_space.sample()
+                elif agent.property is Property.MADDPG:
+                    if t > start_steps:
+                        # obs = normalize(o[i])
+                        a = agent.act(o[i])
+                    else:
+                        a = agent.action_space.sample()
                 a_ = agent.ac_targ.pi(torch.as_tensor(o[i], dtype=torch.float32))
                 acts.append(a)
-                acts_.append(a_)
-
+                acts_targ.append(a_)
+            
             for i, _act in enumerate(acts):
                 if _act is None:
                     continue
@@ -104,30 +129,37 @@ def train(episodes_n=int(1e7),
                 if not agent:
                     rews.append(None)
                     continue
-                r = env.step(acts[i], i, is_continuous=True)
+                if agent.property is Property.MADDPG:
+                    r = env.step(acts[i], i, is_continuous=True, update_value=True)
+                elif agent.property is Property.GOOD:
+                    r = env.step(acts[i], i, is_continuous=True, update_value=False)
                 rews.append(r)
                 ep_ret[i] += r
             env.update_value_of_node()
             d = env.is_done(tolerance)
             o_ = env.states()
-            # [normalize(x) for x in o_]
-            # env.update_value_of_node()
 
-            # Ignore the "done" signal if it comes from hitting the time
-            # horizon (that is, when it's an artificial terminal signal
-            # that isn't based on the agent's state)
-
+            # concat X, X_, A, A_
             X, X_, A, A_ = [[] for _ in range(10)], [[] for _ in range(10)], [[] for _ in range(10)], [[] for _ in range(10)]
             for i, agent in enumerate(agents):
                 if not agent:
                     continue
-                for j in env.map.nodes[i].weights.keys():
-                    if not o[j] or j == i:
-                        continue
-                    X[i].append(o[j])
-                    X_[i].append(o_[j])
-                    A[i].append(acts[j])
-                    A_[i].append(acts_[j])
+                if agent.property is Property.GOOD:
+                    for j in env.map.nodes[i].weights.keys():
+                        if not o[j] or j == i or agents[j].property is not Property.GOOD:
+                            continue
+                        X[i].append(o[j])
+                        X_[i].append(o_[j])
+                        A[i].append(acts[j])
+                        A_[i].append(acts_targ[j])
+                elif agent.property is Property.MADDPG:
+                    for j, agent_ in enumerate(agents):
+                        if not o[j] or j == i or agent_.property is not Property.MADDPG:
+                            continue
+                        X[i].append(o[j])
+                        X_[i].append(o_[j])
+                        A[i].append(acts[j])
+                        A_[i].append(acts_targ[j])
 
             X = [x if len(x) == 0 else np.concatenate(x) for x in X]
             X_ = [x if len(x) == 0 else np.concatenate(x) for x in X_]
@@ -137,7 +169,7 @@ def train(episodes_n=int(1e7),
             for i, agent in enumerate(agents):
                 if not agent:
                     continue
-                agent.memory.store(o[i], acts[i], rews[i], o_[i], acts_[i], d, X[i], X_[i], A[i], A_[i])
+                agent.memory.store(o[i], acts[i], rews[i], o_[i], acts_targ[i], d, X[i], X_[i], A[i], A_[i])
             # Store experience to replay buffer
             # Super critical, easy to overlook step: make sure to update
             # most recent observation!
@@ -147,6 +179,7 @@ def train(episodes_n=int(1e7),
             if env.is_done(tolerance) or steps >= epochs_n:
                 for i in range(10):
                     writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
+                    writer.add_scalars('Node {0} Weights'.format(i), {'Adj {0}'.format(k): v for k, v in env.map.nodes[i].weights.items()}, t)
                 break
 
             if not train:
