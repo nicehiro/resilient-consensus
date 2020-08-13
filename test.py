@@ -44,6 +44,8 @@ if __name__ == '__main__':
     parser.add_argument('--evil_nodes_type', type=str, help='Evil nodes type. 3r, 2r1c, 1r2c etc.')
     parser.add_argument('--train_method', type=str, help='Train method. DQN, DDPG .etc.')
     parser.add_argument('--tolerance', type=float, help='Done tolerance.')
+    parser.add_argument('--save_csv', type=str2bool, help='Save csv')
+    parser.add_argument('--with_noise', type=str2bool, help='Update node value with noise.')
     args = parser.parse_args()
     batch_num = args.batch_num
     tolerance = args.tolerance
@@ -71,6 +73,8 @@ if __name__ == '__main__':
             tolerance=tolerance,
             polyak=args.polyak,
             noise_scale=args.noise_scale,
+            save_csv=args.save_csv,
+            with_noise=args.with_noise
         )
         if env.is_done(tolerance):
             success_times += 1

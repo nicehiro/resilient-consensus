@@ -116,7 +116,7 @@ class Map:
         """
         self.nodes[node_i].update_v_directly(value)
 
-    def update_value_of_node(self):
+    def update_value_of_node(self, with_noise=False):
         """Update value of every node.
         """
         for node in self.nodes:
@@ -124,7 +124,8 @@ class Map:
                 m = 0
                 for i, w in node.weights.items():
                     m += w * (self.nodes[i].v - node.v)
-                node.v += m
+                noise = (random.random() - 0.5) * 2 * self.times * 0.01 if with_noise else 0
+                node.v += m + noise
             elif node.property == Property.CONSTANT:
                 pass
             elif node.property == Property.RANDOM:
@@ -177,17 +178,18 @@ class Map:
         return str
 
     def node_val(self):
-        str = ''
+        res = {}
         for i, node in enumerate(self.nodes):
-            str += 'Node: {0}\tValue: {1}\n'.format(i, node.v)
-        return str
+            res['Node{0}'.format(i)] = node.v
+        return res
 
 
 class Env:
 
-    def __init__(self, nodes_n, evil_nodes_type, reset_env=True, times=1):
+    def __init__(self, nodes_n, evil_nodes_type, reset_env=True, times=1, with_noise=False):
         self.nodes_n = nodes_n
         self.times = times
+        self.with_noise = with_noise
         self.goods_n = 7
         self.rivals_n = 1
         self.randoms_n = 0
@@ -291,7 +293,9 @@ class Env:
         r = 0
         property = self.map.nodes[node_i].property
         if property is Property.GOOD:
-            d = self.__calc_distance(node_i)
+            d = 0
+            for j, w in self.map.nodes[node_i].weights.items():
+                d += abs(self.map.nodes[j].v - self.map.nodes[node_i].v) * w
             # r = 1e-2 * (self.distances[node_i] - d)
             # self.distances[node_i] = d
             r = 1e-3 * (math.exp(-1 * d) - 0.9)
@@ -324,7 +328,7 @@ class Env:
          When asynchronous update node, use this function when
          each node's updating finished.
         """
-        self.map.update_value_of_node()
+        self.map.update_value_of_node(with_noise=self.with_noise)
         if rival_action_args and type(rival_action_args) is dict:
             for node_i, action in rival_action_args.items():
                 self.map.nodes[node_i].update_v(action)

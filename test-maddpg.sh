@@ -18,4 +18,6 @@ nohup python test.py\
     --save=True\
     --evil_nodes_type=$1\
     --tolerance=0.05\
+    --save_csv=True\
+    --with_noise=False\
     > opinion-maddpg-$1-test.log &

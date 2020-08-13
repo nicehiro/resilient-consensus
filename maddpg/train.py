@@ -4,6 +4,8 @@ import torch
 import numpy as np
 from gym.spaces import Box
 
+import pandas as pd
+
 from maddpg.agent import Agent
 from env import Env, Property
 from torch.utils.tensorboard import SummaryWriter
@@ -29,9 +31,11 @@ def train(episodes_n=int(1e7),
           log_path='maddpg-3r-logs',
           save=False,
           reset_env=True,
+          with_noise=False,
+          save_csv=False,
           evil_nodes_type='3r'):
     writer = SummaryWriter(log_dir=log_path)
-    env = Env(nodes_n=10, evil_nodes_type=evil_nodes_type, reset_env=reset_env)
+    env = Env(nodes_n=10, evil_nodes_type=evil_nodes_type, reset_env=reset_env, times=1, with_noise=with_noise)
     X_dims = [0 for _ in range(10)]
     A_dims = [0 for _ in range(10)]
     for i, node in enumerate(env.map.nodes):
@@ -65,11 +69,15 @@ def train(episodes_n=int(1e7),
     t = 0
 
     # Main loop: collect experience in env and update/log each epoch
+    if save_csv:
+        df = pd.DataFrame(columns=['Node{0}'.format(i) for i in range(env.nodes_n)])
     for epi in range(episodes_n):
         o = env.reset()
         steps = 0
         ep_ret = [0 for _ in range(10)]
         for epo in range(epochs_n): 
+            if save_csv:
+                df = df.append(env.map.node_val(), ignore_index=True)
             t += 1
             steps += 1
             # Until start_steps have elapsed, randomly sample actions
@@ -77,7 +85,7 @@ def train(episodes_n=int(1e7),
             # use the learned policy (with some noise, via act_noise).
             acts = []
             acts_ = []
-            # [normalize(x) for x in o]
+            # o = [normalize(x) for x in o]
             for i, agent in enumerate(agents):
                 if not agent:
                     acts.append(None)
@@ -123,6 +131,7 @@ def train(episodes_n=int(1e7),
                     continue
                 for j in env.map.nodes[i].weights.keys():
                     if not o[j] or j == i:
+                    # if o[j].size == 0 or j == i:
                         continue
                     X[i].append(o[j])
                     X_[i].append(o_[j])
@@ -144,7 +153,7 @@ def train(episodes_n=int(1e7),
             o = o_
 
             # End of trajectory handling
-            if env.is_done(tolerance) or steps >= epochs_n:
+            if steps >= epochs_n:
                 for i in range(10):
                     writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
                 break
@@ -161,6 +170,9 @@ def train(episodes_n=int(1e7),
                     writer.add_scalar('Loss Q/Node {0}'.format(i), loss_q, t)
                     writer.add_scalar('Loss Pi/Node {0}'.format(i), loss_pi, t)
                     agent.save()
+    with_noise_str = '' if not with_noise else 'noise_'
+    if save_csv:
+        df.to_csv('maddpg_{0}{1}.csv'.format(with_noise_str, evil_nodes_type))
     return env
 
 

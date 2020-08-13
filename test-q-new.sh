@@ -6,4 +6,6 @@ nohup python test.py\
     --train_method='q_new'\
     --evil_nodes_type=$1\
     --tolerance=10\
+    --save_csv=False\
+    --with_noise=False\
     > opinion-q-new-$1-test.log &
