@@ -17,11 +17,16 @@ class Agent:
                  action_space,
                  actor_lr=1e-5,
                  critic_lr=1e-4,
-                 memory_size=100,
-                 gamma=0.99,
+                 memory_size=int(1e4),
+                 gamma=0.95,
                  polyak=0.95,
-                 noise_scale=0.1,
-                 batch_size=4):
+                 noise_scale=0.05,
+                 batch_size=64,
+                 restore_path='./models/ddpg/',
+                 evil_nodes_type='3r',
+                 train=False,
+                 hidden_layer=3,
+                 hidden_size=256):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
         if isinstance(observation_space, Box):
@@ -29,7 +34,7 @@ class Agent:
         elif isinstance(observation_space, Discrete):
             self.act_dim = action_space.n
         self.action_space = action_space
-        self.ac = MLPActorCritic(observation_space, action_space, [512, 512], nn.ReLU)
+        self.ac = MLPActorCritic(observation_space, action_space, [hidden_size for _ in range(hidden_layer)], nn.ReLU)
         self.ac_targ = deepcopy(self.ac)
         for p in self.ac_targ.parameters():
             p.requires_grad = False
@@ -41,10 +46,15 @@ class Agent:
         self.noise_scale = noise_scale
         self.act_limit = action_space.high[0]
         self.batch_size = batch_size
+        self.evil_nodes_type = evil_nodes_type
+        self.train = train
+        self.restore_path = restore_path + '{0}/{1}.pkl'.format(self.evil_nodes_type, node_i)
+        if not self.train:
+            self.restore()
 
     def act(self, obs):
         a = self.ac.act(torch.as_tensor(obs, dtype=torch.float32))
-        # a += self.noise_scale * np.random.randn(self.act_dim)
+        a += self.noise_scale * np.random.randn(self.act_dim)
         return np.clip(a, 0, self.act_limit)
 
     def optimize(self):
@@ -77,6 +87,8 @@ class Agent:
             self.q_optimizer.zero_grad()
             loss_q, loss_info = compute_loss_q(data)
             loss_q.backward()
+            nn.utils.clip_grad_value_(self.ac.pi.parameters(), clip_value=0.5)
+            nn.utils.clip_grad_value_(self.ac.q.parameters(), clip_value=0.5)
             self.q_optimizer.step()
 
             # Freeze Q-network so you don't waste computational effort
@@ -88,6 +100,8 @@ class Agent:
             self.pi_optimizer.zero_grad()
             loss_pi = compute_loss_pi(data)
             loss_pi.backward()
+            nn.utils.clip_grad_value_(self.ac.pi.parameters(), clip_value=0.5)
+            nn.utils.clip_grad_value_(self.ac.q.parameters(), clip_value=0.5)
             self.pi_optimizer.step()
 
             # Unfreeze Q-network so you can optimize it at next DDPG step.
@@ -104,4 +118,17 @@ class Agent:
             return loss_q, loss_pi
 
         batch = self.memory.sample_batch(self.batch_size)
-        return update(batch)
+        loss_q, loss_pi = update(batch)
+        if self.train:
+            self.save()
+        return loss_q, loss_pi
+
+    def save(self):
+        print('Save model: {0} Success!'.format(self.restore_path))
+        torch.save(self.ac_targ.state_dict(), self.restore_path)
+
+    def restore(self):
+        print('Load model: {0} Success!'.format(self.restore_path))
+        params = torch.load(self.restore_path)
+        self.ac_targ.load_state_dict(params)
+        self.ac.load_state_dict(params)

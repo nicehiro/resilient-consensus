@@ -91,6 +91,8 @@ class Map:
         self.matrix[node_i][neigh_i] = weight
 
     def update_by_weight_index(self, node_i, weight_i, weight):
+        if node_i == self.weights_index[node_i][weight_i]:
+            return
         self.update_by_weight(node_i,
                               self.weights_index[node_i][weight_i],
                               weight)
@@ -146,9 +148,7 @@ class Map:
         states = [[] for _ in range(self.nodes_n)]
         for i, node in enumerate(self.nodes):
             if node.property == Property.GOOD:
-                states[i].append(node.v)
-                for v, w in node.weights.items():
-                    states[i].append(w)
+                for v, _ in node.weights.items():
                     states[i].append(self.nodes[v].v)
             elif node.property == Property.RIVAL:
                 for node in self.nodes:
@@ -247,8 +247,10 @@ class Env:
         outputs_n = []
         for i, x in enumerate(nodes):
             if x.property == Property.GOOD:
-                features_n.append(x.neighbors_n * 2 + 1)
-                outputs_n.append(x.neighbors_n * 2)
+                # features: self node and neighbors' node value
+                # outputs: neighbors' node weight
+                features_n.append(x.neighbors_n)
+                outputs_n.append(x.neighbors_n - 1)
             elif x.property == Property.RIVAL:
                 features_n.append(self.goods_n)
                 # output self value
@@ -272,8 +274,14 @@ class Env:
             # update weight
             if is_continuous:
                 # action = action[0]
-                for i in range(len(action)):
-                    self.map.update_by_weight_index(node_i, i, action[i])
+                i = j = 0
+                while i < len(action):
+                    if node_i == self.map.weights_index[node_i][j]:
+                        j += 1
+                        continue
+                    self.map.update_by_weight_index(node_i, j, action[i])
+                    i += 1
+                    j += 1
             else:
                 for i in range(len(action)):
                     if action[i] == 1:
@@ -296,9 +304,9 @@ class Env:
             d = 0
             for j, w in self.map.nodes[node_i].weights.items():
                 d += abs(self.map.nodes[j].v - self.map.nodes[node_i].v) * w
-            # r = 1e-2 * (self.distances[node_i] - d)
-            # self.distances[node_i] = d
-            r = 1e-3 * (math.exp(-1 * d) - 0.9)
+            # ddpg 3r 
+            # r = 1 * (math.exp(-20 * d) - 0.5)
+            r = 1 * (math.exp(-20 * d) - 0.5)
         elif property is Property.MADDPG:
             d = self.__calc_distance(node_i)
             r = 1e-3 * (math.exp(1 * d) - 0.9)
