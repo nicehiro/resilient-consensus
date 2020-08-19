@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--tolerance', type=float, help='Done tolerance.')
     parser.add_argument('--save_csv', type=str2bool, help='Save csv')
     parser.add_argument('--with_noise', type=str2bool, help='Update node value with noise.')
+    parser.add_argument('--directed_graph', type=str2bool, help='Use directed graph or not.')
     args = parser.parse_args()
     batch_num = args.batch_num
     tolerance = args.tolerance
@@ -74,7 +75,8 @@ if __name__ == '__main__':
             polyak=args.polyak,
             noise_scale=args.noise_scale,
             save_csv=args.save_csv,
-            with_noise=args.with_noise
+            with_noise=args.with_noise,
+            directed_graph=args.directed_graph,
         )
         if env.is_done(tolerance):
             success_times += 1

@@ -6,10 +6,8 @@ import torch.nn as nn
 from gym.spaces import Box, Discrete
 from torch.optim import Adam
 
-from env import Property
-
-from rival.maddpg_vs_maddpg.core import MLPActorCritic
-from rival.maddpg_vs_maddpg.memory import ReplayBuffer
+from ddpg.core import MLPActorCritic
+from ddpg.memory import ReplayBuffer
 
 
 class Agent:
@@ -19,19 +17,16 @@ class Agent:
                  action_space,
                  actor_lr=1e-5,
                  critic_lr=1e-4,
-                 memory_size=100,
-                 gamma=0.99,
+                 memory_size=int(1e4),
+                 gamma=0.95,
                  polyak=0.95,
-                 train=True,
-                 noise_scale=0.1,
-                 batch_size=4,
-                 hidden_size=64,
-                 hidden_layers=4,
-                 restore_path='./models/',
-                 X_dim=0,
-                 A_dim=0,
+                 noise_scale=0.05,
+                 batch_size=64,
+                 restore_path='./model/rival/',
                  evil_nodes_type='3r',
-                 property=Property.GOOD):
+                 train=False,
+                 hidden_layer=3,
+                 hidden_size=256):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
         if isinstance(observation_space, Box):
@@ -39,41 +34,38 @@ class Agent:
         elif isinstance(observation_space, Discrete):
             self.act_dim = action_space.n
         self.action_space = action_space
-        self.ac = MLPActorCritic(observation_space, action_space, X_dim, A_dim, [hidden_size for _ in range(hidden_layers)], nn.ReLU)
+        self.ac = MLPActorCritic(observation_space, action_space, [hidden_size for _ in range(hidden_layer)], nn.ReLU)
         self.ac_targ = deepcopy(self.ac)
         for p in self.ac_targ.parameters():
             p.requires_grad = False
-        self.memory = ReplayBuffer(self.obs_dim, self.act_dim, memory_size, X_dim, A_dim)
+        self.memory = ReplayBuffer(self.obs_dim, self.act_dim, memory_size)
         self.pi_optimizer = Adam(self.ac.pi.parameters(), lr=actor_lr)
         self.q_optimizer = Adam(self.ac.q.parameters(), lr=critic_lr)
         self.gamma = gamma
         self.polyak = polyak
-        self.train = train
-        self.restore_path = restore_path + '{0}/{1}.pkl'.format(evil_nodes_type, node_i)
         self.noise_scale = noise_scale
         self.act_limit = action_space.high[0]
         self.batch_size = batch_size
-        self.property = property
+        self.evil_nodes_type = evil_nodes_type
+        self.train = train
+        self.restore_path = restore_path + '{0}.pkl'.format(node_i)
         if not self.train:
             self.restore()
 
     def act(self, obs):
         a = self.ac.act(torch.as_tensor(obs, dtype=torch.float32))
-        # a += self.noise_scale * np.random.randn(self.act_dim)
+        a += self.noise_scale * np.random.randn(self.act_dim)
         return np.clip(a, 0, self.act_limit)
 
     def optimize(self):
         # Set up function for computing DDPG Q-loss
         def compute_loss_q(data):
-            o, a, r, o2, a2, d, X, X_, A, A_ = data['obs'], data['act'], data['rew'], data['obs2'], data['act2'], data['done'], data['X'], data['X_'], data['A'], data['A_']
-            X = torch.cat([X, o], axis=1)
-            X_ = torch.cat([X_, o2], axis=1)
-            A = torch.cat([A, a], axis=1)
-            A_ = torch.cat([A_, a2], axis=1)
-            q = self.ac.q(X, A)
+            o, a, r, o2, d = data['obs'], data['act'], data['rew'], data['obs2'], data['done']
+
+            q = self.ac.q(o, a)
             # Bellman backup for Q function
             with torch.no_grad():
-                q_pi_targ = self.ac_targ.q(X_, A_)
+                q_pi_targ = self.ac_targ.q(o2, self.ac_targ.pi(o2))
                 backup = r + self.gamma * (1 - d) * q_pi_targ
 
             # MSE loss against Bellman backup
@@ -86,12 +78,8 @@ class Agent:
 
         # Set up function for computing DDPG pi loss
         def compute_loss_pi(data):
-            X, A, o = data['X'], data['A'], data['obs']
-            a = self.ac.pi(o)
-            # TODO A+a
-            X = torch.cat([X, o], axis=1)
-            A = torch.cat([A, a], axis=1)
-            q_pi = self.ac.q(X, A)
+            o = data['obs']
+            q_pi = self.ac.q(o, self.ac.pi(o))
             return -q_pi.mean()
 
         def update(data):
@@ -129,14 +117,16 @@ class Agent:
                     p_targ.data.add_((1 - self.polyak) * p.data)
             return loss_q, loss_pi
 
-        if not self.train:
-            return 0, 0
-        batch = self.memory.sample_batch(self.batch_size)
-        return update(batch)
+        if self.train:
+            batch = self.memory.sample_batch(self.batch_size)
+            loss_q, loss_pi = update(batch)
+            self.save()
+            return loss_q, loss_pi
+        return 0, 0
 
     def save(self):
-        print('Save model: {0} Success!'.format(self.restore_path))
         torch.save(self.ac_targ.state_dict(), self.restore_path)
+        print('Save model: {0} Success!'.format(self.restore_path))
 
     def restore(self):
         print('Load model: {0} Success!'.format(self.restore_path))

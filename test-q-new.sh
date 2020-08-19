@@ -5,7 +5,8 @@ nohup python test.py\
     --batch_num=1000\
     --train_method='q_new'\
     --evil_nodes_type=$1\
-    --tolerance=10\
+    --tolerance=0.05\
     --save_csv=False\
-    --with_noise=False\
+    --with_noise=True\
+    --directed_graph=True\
     > opinion-q-new-$1-test.log &

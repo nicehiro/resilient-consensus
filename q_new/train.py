@@ -14,18 +14,20 @@ def make_q(env: Env, init_value):
 
 def q_consensus(**kwargs):
     # print(kwargs)
-    env = Env(nodes_n=10, reset_env=kwargs['reset_env'], evil_nodes_type=kwargs['evil_nodes_type'], times=1000, with_noise=kwargs['with_noise'])
+    env = Env(nodes_n=10, reset_env=kwargs['reset_env'], evil_nodes_type=kwargs['evil_nodes_type'], times=1, with_noise=kwargs['with_noise'], directed_graph=kwargs['directed_graph'])
     Q = make_q(env, 1)
     step_size = 0.01
     if kwargs['save_csv']:
         df = pd.DataFrame(columns=['Node{0}'.format(i) for i in range(env.nodes_n)])
-    for epi in range(1000):
+    for epi in range(2000):
         if kwargs['save_csv']:
             df = df.append(env.map.node_val(), ignore_index=True)
         for i, node in enumerate(env.map.nodes):
             for j, q in Q[i].items():
-                # 3r: 0.0002     1r2c: 0.0001      2r1c: 0.0001      3c: 0.0001
-                r_ij = math.exp(- abs(env.map.nodes[j].v - node.v) * (0.01 + 0.0001 * epi))
+                # 0.01 3r: 0.0002     1r2c: 0.0001      2r1c: 0.0001      3c: 0.0001
+                # times=1, directed graph: 1 + 0.1 * epi, range(2000)
+                # times=1, undirected graph: 10 + 0.1 * epi, range(1000)
+                r_ij = math.exp(- abs(env.map.nodes[j].v - node.v) * (1 + 0.1 * epi))
                 Q[i][j] += step_size * (r_ij - Q[i][j])
             q_sum = sum(Q[i].values())
             for j in Q[i].keys():
@@ -33,10 +35,11 @@ def q_consensus(**kwargs):
                 env.map.update_by_weight(i, j, w)
             env.map.normalize(i)
         env.map.update_value_of_node(with_noise=kwargs['with_noise'])
-    # print(env.map)
+    print(env.map)
     with_noise_str = '' if not kwargs['with_noise'] else 'noise_'
+    directed_str = '' if not kwargs['directed_graph'] else 'directed_'
     if kwargs['save_csv']:
-        df.to_csv('q_new_{0}{1}.csv'.format(with_noise_str, kwargs['evil_nodes_type']))
+        df.to_csv('q_new_{0}{1}{2}.csv'.format(with_noise_str, directed_str, kwargs['evil_nodes_type']))
     return env
 
 

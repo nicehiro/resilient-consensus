@@ -186,7 +186,7 @@ class Map:
 
 class Env:
 
-    def __init__(self, nodes_n, evil_nodes_type, reset_env=True, times=1, with_noise=False):
+    def __init__(self, nodes_n, evil_nodes_type, reset_env=True, times=1, with_noise=False, directed_graph=False):
         self.nodes_n = nodes_n
         self.times = times
         self.with_noise = with_noise
@@ -195,6 +195,7 @@ class Env:
         self.randoms_n = 0
         self.constants_n = 2
         self.reset_env = reset_env
+        self.directed_graph = directed_graph
         self.distances = [0 for _ in range(self.nodes_n)]
         self.evil_nodes_type = evil_nodes_type
         self.map, self.features_n, self.outputs_n = self.make_map()
@@ -218,6 +219,7 @@ class Env:
         node_constant_3 = Node(0, random.random() * self.times, Property.CONSTANT)
         node_rival_1 = Node(0, random.random() * self.times, Property.RIVAL)
         node_rival_2 = Node(1, random.random() * self.times, Property.RIVAL)
+        node_rival_3 = Node(2, random.random() * self.times, Property.RIVAL)
         node_maddpg_0 = Node(0, random.random() * self.times, Property.MADDPG)
         node_maddpg_1 = Node(1, random.random() * self.times, Property.MADDPG)
         node_maddpg_2 = Node(2, random.random() * self.times, Property.MADDPG)
@@ -231,18 +233,36 @@ class Env:
             evil_nodes = [node_constant_3, node_constant_1, node_constant_2]
         elif self.evil_nodes_type == 'maddpg':
             evil_nodes = [node_maddpg_0, node_maddpg_1, node_maddpg_2]
+        elif self.evil_nodes_type == 'rival':
+            evil_nodes = [node_rival_1, node_rival_2, node_rival_3]
         nodes = evil_nodes + \
                 [Node(i, random.random() * self.times, Property.GOOD) for i in range(3, self.nodes_n)]
-        nodes[0].weights = {0: 1, 6: 0, 7: 0}
-        nodes[1].weights = {1: 1, 3: 0, 7: 0, 8: 0}
-        nodes[2].weights = {2: 1, 3: 0, 4: 0, 5: 0, 9: 0}
-        nodes[3].weights = {1: 0.2, 3: 0.2, 5: 0.2, 6: 0.2, 9: 0.2}
-        nodes[4].weights = {2: 0.2, 4: 0.2, 6: 0.2, 7: 0.2, 8: 0.2}
-        nodes[5].weights = {2: 0.2, 3: 0.2, 5: 0.2, 7: 0.2, 8: 0.2}
-        nodes[6].weights = {0: 0.2, 3: 0.2, 4: 0.2, 6: 0.2, 7: 0.2}
-        nodes[7].weights = {0: 0.125, 1: 0.125, 4: 0.125, 5: 0.125, 6: 0.125, 7: 0.125, 8: 0.125, 9: 0.125}
-        nodes[8].weights = {1: 0.2, 4: 0.2, 5: 0.2, 7: 0.2, 8: 0.2}
-        nodes[9].weights = {2: 0.25, 3: 0.25, 7: 0.25, 9: 0.25}
+        if not self.directed_graph:
+            # undirected graph
+            print('Use Undirected Graph!')
+            nodes[0].weights = {0: 1, 6: 0, 7: 0}
+            nodes[1].weights = {1: 1, 3: 0, 7: 0, 8: 0}
+            nodes[2].weights = {2: 1, 3: 0, 4: 0, 5: 0, 9: 0}
+            nodes[3].weights = {1: 0.2, 3: 0.2, 5: 0.2, 6: 0.2, 9: 0.2}
+            nodes[4].weights = {2: 0.2, 4: 0.2, 6: 0.2, 7: 0.2, 8: 0.2}
+            nodes[5].weights = {2: 0.2, 3: 0.2, 5: 0.2, 7: 0.2, 8: 0.2}
+            nodes[6].weights = {0: 0.2, 3: 0.2, 4: 0.2, 6: 0.2, 7: 0.2}
+            nodes[7].weights = {0: 0.125, 1: 0.125, 4: 0.125, 5: 0.125, 6: 0.125, 7: 0.125, 8: 0.125, 9: 0.125}
+            nodes[8].weights = {1: 0.2, 4: 0.2, 5: 0.2, 7: 0.2, 8: 0.2}
+            nodes[9].weights = {2: 0.25, 3: 0.25, 7: 0.25, 9: 0.25}
+        else:
+            print('Use Directed Graph!')
+            # direct graph
+            nodes[0].weights = {0: 1}
+            nodes[1].weights = {1: 1}
+            nodes[2].weights = {2: 1}
+            nodes[3].weights = {0: 2, 1: 0.2, 3: 0.2, 4: 0.2, 7: 0.2}
+            nodes[4].weights = {2: 0.25, 4: 0.25, 5: 0.25, 8: 0.25}
+            nodes[5].weights = {2: 0.33, 3: 0.33, 5: 0.33}
+            nodes[6].weights = {1: 0.25, 4: 0.25, 5: 0.25, 6: 0.25}
+            nodes[7].weights = {0: 0.25, 4: 0.25, 6: 0.25, 7: 0.25}
+            nodes[8].weights = {1: 0.25, 3: 0.25, 5: 0.25, 8: 0.25}
+            nodes[9].weights = {2: 0.25, 3: 0.25, 6: 0.25, 9: 0.25}
         features_n = []
         outputs_n = []
         for i, x in enumerate(nodes):
@@ -254,7 +274,7 @@ class Env:
             elif x.property == Property.RIVAL:
                 features_n.append(self.goods_n)
                 # output self value
-                outputs_n.append(2)
+                outputs_n.append(1)
             elif x.property == Property.MADDPG:
                 features_n.append(x.neighbors_n)
                 # output self value
@@ -308,17 +328,23 @@ class Env:
             # r = 1 * (math.exp(-20 * d) - 0.5)
             r = 1 * (math.exp(-20 * d) - 0.5)
         elif property is Property.MADDPG:
-            d = self.__calc_distance(node_i)
-            r = 1e-3 * (math.exp(1 * d) - 0.9)
-        elif property is Property.RIVAL:
-            dist = 0
-            n = 0
-            for i in range(self.nodes_n):
+            d = 0
+            t = 0
+            for i in range(self.nodes_n-self.goods_n, self.nodes_n):
                 for j in range(i, self.nodes_n):
-                    if self.map.nodes[i].property == self.map.nodes[j].property == Property.GOOD:
-                        dist += abs(self.map.nodes[i].v - self.map.nodes[j].v)
-                        n += 1
-            r = 1e-3 * (math.exp(dist / n) - 1)
+                    d += abs(self.map.nodes[i].v - self.map.nodes[j].v)
+                    t += 1
+            d /= t
+            r = 1 * (math.exp(-20 * d) - 0.5)
+        elif property is Property.RIVAL:
+            d = 0
+            t = 0
+            for i in range(self.nodes_n-self.goods_n, self.nodes_n):
+                for j in range(i, self.nodes_n):
+                    d += abs(self.map.nodes[i].v - self.map.nodes[j].v)
+                    t += 1
+            d /= t
+            r = 1 * (math.log(20 * d + 1) - 0.5)
         return r
 
     def __calc_distance(self, node_i):

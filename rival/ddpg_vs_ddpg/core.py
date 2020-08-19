@@ -56,7 +56,7 @@ class MLPQFunction(nn.Module):
 
 class MLPActorCritic(nn.Module):
 
-    def __init__(self, observation_space, action_space, X_dim, A_dim, hidden_sizes=(256,256),
+    def __init__(self, observation_space, action_space, hidden_sizes=(256,256),
                  activation=nn.ReLU):
         super().__init__()
 
@@ -66,7 +66,7 @@ class MLPActorCritic(nn.Module):
 
         # build policy and value functions
         self.pi = MLPActor(obs_dim, act_dim, hidden_sizes, activation, act_limit)
-        self.q = MLPQFunction(X_dim+obs_dim, A_dim+act_dim, hidden_sizes, activation)
+        self.q = MLPQFunction(obs_dim, act_dim, hidden_sizes, activation)
 
     def act(self, obs):
         with torch.no_grad():
