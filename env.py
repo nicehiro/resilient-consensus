@@ -18,6 +18,8 @@ class Property(Enum):
     RIVAL = 4
     # with maddpg agent
     MADDPG = 5
+    # creepy
+    CREEPY = 6
 
 
 class Node:
@@ -132,6 +134,11 @@ class Map:
                 pass
             elif node.property == Property.RANDOM:
                 node.v = random.random() * self.times
+            elif node.property == Property.CREEPY:
+                if random.random() < 0.5:
+                    node.v = random.random() * self.times
+                else:
+                    pass
             elif node.property == Property.RIVAL:
                 pass
             elif node.property == Property.MADDPG:
