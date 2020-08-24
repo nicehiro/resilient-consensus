@@ -98,10 +98,6 @@ def train(**kwargs):
             # most recent observation!
             o = o_
 
-            # End of trajectory handling
-            if kwargs['train']:
-                for i in range(10):
-                    writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
 
             # Update handling
             if kwargs['train']:
@@ -114,6 +110,11 @@ def train(**kwargs):
                         writer.add_scalar('Loss Q/Node {0}'.format(i), loss_q, t)
                         writer.add_scalar('Loss Pi/Node {0}'.format(i), loss_pi, t)
                         agent.save()
+        
+        # End of trajectory handling
+        if kwargs['train']:
+            for i in range(10):
+                writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
     print(env.map)
     return env
 
