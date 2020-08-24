@@ -14,3 +14,4 @@ settings.json
 *logs/
 .VSCodeCounter/
 *.csv
+figures/
