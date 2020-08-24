@@ -100,10 +100,6 @@ def train(**kwargs):
             # most recent observation!
             o = o_
 
-            # End of trajectory handling
-            if kwargs['train']:
-                for i in range(10):
-                    writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
             # ac.save()
             o, ep_len = o_, 0
             ep_ret = [0 for _ in range(10)]
@@ -118,6 +114,11 @@ def train(**kwargs):
                             loss_q, loss_pi = agent.optimize()
                         writer.add_scalar('Loss Q/Node {0}'.format(i), loss_q, t)
                         writer.add_scalar('Loss Pi/Node {0}'.format(i), loss_pi, t)
+        
+        # End of trajectory handling
+        if kwargs['train']:
+            for i in range(10):
+                writer.add_scalar('Return/Node {0}'.format(i), ep_ret[i], t)
     with_noise_str = '' if not kwargs['with_noise'] else 'noise_'
     if kwargs['save_csv']:
         df.to_csv('ddpg_{0}{1}.csv'.format(with_noise_str, kwargs['evil_nodes_type']))

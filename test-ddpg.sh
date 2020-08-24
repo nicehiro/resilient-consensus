@@ -11,7 +11,7 @@ nohup python test.py\
     --hidden_layer=3\
     --log_path=ddpg-$1-logs\
     --reset_env=True\
-    --batch_num=1000\
+    --batch_num=1\
     --train_method='ddpg_train'\
     --train=False\
     --save=False\

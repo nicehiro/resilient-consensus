@@ -5,7 +5,7 @@ from q_new.train import q_consensus
 from utils import batch_train
 from maddpg.train import train as maddpg_train
 from rival.ddpg_vs_ddpg.train import train as rival_ddpg_train
-from rival.ddpg_vs_ddpg.train import train as rival_qnew_train
+from rival.qnew_vs_ddpg.train import train as rival_qnew_train
 import argparse
 
 
@@ -29,14 +29,14 @@ if __name__ == '__main__':
     #              tolerance=10,
     #              save_csv=False,
     #              with_noise=False)
-    # q_consensus(reset_env=False, evil_nodes_type='3c', save_csv=True, with_noise=True, directed_graph=True)
+    # q_consensus(reset_env=False, evil_nodes_type='2r1c', save_csv=True, with_noise=True, directed_graph=True)
     # batch_train(dqn_train, method='DQN', label='3c')
     # pg_train()
     # rival_maddpg_train(evil_nodes_type='maddpg')
     # rival_qnew_train(evil_nodes_type='maddpg', reset_env=False, actor_lr=0.00001, critic_lr=0.000001, memory_size=int(1e6), noise_scale=0.1, batch_size=1024, polyak=0.99)
 
     # ddpg 3 random train success method
-    # ddpg_train(episodes_n=800,
+    # ddpg_train(episodes_n=1000,
     #              epochs_n=100,
     #              restore=False,
     #              memory_size=int(1e4),
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     #              with_noise=False)
 
     # ddpg 2 random 1 constant success method
-    # ddpg_train(episodes_n=800,
+    # ddpg_train(episodes_n=1000,
     #              epochs_n=100,
     #              restore=False,
     #              memory_size=int(1e4),
@@ -78,25 +78,25 @@ if __name__ == '__main__':
     #              with_noise=False)
 
     # ddpg 1 random 2 constant
-    # ddpg_train(episodes_n=800,
-    #              epochs_n=100,
-    #              restore=False,
-    #              memory_size=int(1e4),
-    #              batch_size=64,
-    #              actor_lr=0.0001,
-    #              critic_lr=0.0001,
-    #              polyak=0.9,
-    #              gamma=0.9,
-    #              hidden_layer=3,
-    #              hidden_size=256,
-    #              log_path='ddpg-1r2c-logs',
-    #              reset_env=True,
-    #              train=True,
-    #              save=False,
-    #              evil_nodes_type='1r2c',
-    #              tolerance=0.1,
-    #              save_csv=False,
-    #              with_noise=False)
+    ddpg_train(episodes_n=800,
+                 epochs_n=100,
+                 restore=False,
+                 memory_size=int(1e4),
+                 batch_size=64,
+                 actor_lr=0.0001,
+                 critic_lr=0.0001,
+                 polyak=0.9,
+                 gamma=0.9,
+                 hidden_layer=3,
+                 hidden_size=256,
+                 log_path='ddpg-1r2c-logs',
+                 reset_env=True,
+                 train=True,
+                 save=False,
+                 evil_nodes_type='1r2c',
+                 tolerance=0.1,
+                 save_csv=False,
+                 with_noise=False)
 
     # ddpg 3 constant
     # ddpg_train(episodes_n=800,
@@ -119,23 +119,44 @@ if __name__ == '__main__':
     #              save_csv=False,
     #              with_noise=False)
 
-    # ddpg 3 random train success method
-    rival_ddpg_train(episodes_n=800,
-                     epochs_n=100,
-                     restore=False,
-                     memory_size=int(1e4),
-                     batch_size=64,
-                     actor_lr=0.0001,
-                     critic_lr=0.0001,
-                     polyak=0.9,
-                     gamma=0.9,
-                     hidden_layer=3,
-                     hidden_size=256,
-                     log_path='rival-ddpg-logs',
-                     reset_env=True,
-                     train=True,
-                     save=False,
-                     evil_nodes_type='rival',
-                     tolerance=0.01,
-                     save_csv=False,
-                     with_noise=False)
+    # rival ddpg vs ddpg 
+    # rival_ddpg_train(episodes_n=800,
+    #                  epochs_n=100,
+    #                  restore=False,
+    #                  memory_size=int(1e4),
+    #                  batch_size=64,
+    #                  actor_lr=0.0001,
+    #                  critic_lr=0.0001,
+    #                  polyak=0.9,
+    #                  gamma=0.9,
+    #                  hidden_layer=3,
+    #                  hidden_size=256,
+    #                  log_path='rival-ddpg-logs',
+    #                  reset_env=True,
+    #                  train=True,
+    #                  save=False,
+    #                  evil_nodes_type='rival',
+    #                  tolerance=0.01,
+    #                  save_csv=False,
+    #                  with_noise=False)
+
+    # qnew vs ddpg
+    # rival_qnew_train(episodes_n=1,
+    #                  epochs_n=100000,
+    #                  restore=False,
+    #                  memory_size=int(1e4),
+    #                  batch_size=64,
+    #                  actor_lr=0.0001,
+    #                  critic_lr=0.0001,
+    #                  polyak=0.9,
+    #                  gamma=0.9,
+    #                  hidden_layer=3,
+    #                  hidden_size=256,
+    #                  log_path='rival-qnew-logs',
+    #                  reset_env=True,
+    #                  train=True,
+    #                  save=False,
+    #                  evil_nodes_type='rival',
+    #                  tolerance=0.01,
+    #                  save_csv=False,
+    #                  with_noise=False)

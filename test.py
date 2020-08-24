@@ -3,8 +3,8 @@ from pg.train import train as pg_train
 from ddpg.train import train as ddpg_train
 from q_new.train import q_consensus as q_new
 from maddpg.train import train as maddpg_train
-from rival.maddpg_vs_maddpg.train import train as rival_maddpg
-from rival.qnew_vs_maddpg.train import train as rival_qnew
+from rival.ddpg_vs_ddpg.train import train as rival_maddpg
+from rival.qnew_vs_ddpg.train import train as rival_qnew
 from utils import batch_train
 import argparse
 

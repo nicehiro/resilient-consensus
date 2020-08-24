@@ -250,6 +250,16 @@ class Env:
             nodes[7].weights = {0: 0.125, 1: 0.125, 4: 0.125, 5: 0.125, 6: 0.125, 7: 0.125, 8: 0.125, 9: 0.125}
             nodes[8].weights = {1: 0.2, 4: 0.2, 5: 0.2, 7: 0.2, 8: 0.2}
             nodes[9].weights = {2: 0.25, 3: 0.25, 7: 0.25, 9: 0.25}
+            # nodes[0].weights = {0: 1, 6: 0, 7: 0}
+            # nodes[1].weights = {1: 1, 3: 0, 7: 0, 8: 0}
+            # nodes[2].weights = {2: 1, 3: 0, 4: 0, 5: 0, 9: 0}
+            # nodes[3].weights = {1: 0.2, 2: 0.2, 3: 0.2, 6: 0.2, 9: 0.2}
+            # nodes[4].weights = {2: 0.2, 4: 0.2, 6: 0.2, 7: 0.2, 8: 0.2}
+            # nodes[5].weights = {2: 0.33, 5: 0.33, 8: 0.33}
+            # nodes[6].weights = {0: 0.25, 3: 0.25, 4: 0.25, 6: 0.25}
+            # nodes[7].weights = {0: 0.2, 1: 0.2, 4: 0.2, 7: 0.2, 9: 0.2}
+            # nodes[8].weights = {1: 0.25, 4: 0.25, 5: 0.25, 8: 0.25}
+            # nodes[9].weights = {2: 0.25, 3: 0.25, 7: 0.25, 9: 0.25}
         else:
             print('Use Directed Graph!')
             # direct graph
@@ -344,7 +354,7 @@ class Env:
                     d += abs(self.map.nodes[i].v - self.map.nodes[j].v)
                     t += 1
             d /= t
-            r = 1 * (math.log(20 * d + 1) - 0.5)
+            r = 1 * (0.5 - math.exp(-20 * d))
         return r
 
     def __calc_distance(self, node_i):

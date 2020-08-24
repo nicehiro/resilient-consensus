@@ -19,7 +19,8 @@ def q_consensus(**kwargs):
     step_size = 0.01
     if kwargs['save_csv']:
         df = pd.DataFrame(columns=['Node{0}'.format(i) for i in range(env.nodes_n)])
-    for epi in range(2000):
+    episodes_n = 2000
+    for epi in range(episodes_n):
         if kwargs['save_csv']:
             df = df.append(env.map.node_val(), ignore_index=True)
         for i, node in enumerate(env.map.nodes):
@@ -27,8 +28,10 @@ def q_consensus(**kwargs):
                 # 0.01 3r: 0.0002     1r2c: 0.0001      2r1c: 0.0001      3c: 0.0001
                 # times=1, directed graph: 1 + 0.1 * epi, range(2000)
                 # times=1, undirected graph: 10 + 0.1 * epi, range(1000)
-                r_ij = math.exp(- abs(env.map.nodes[j].v - node.v) * (1 + 0.1 * epi))
-                Q[i][j] += step_size * (r_ij - Q[i][j])
+                r_ij = math.exp(- abs(env.map.nodes[j].v - node.v) * (10 + 0.05 * epi))
+                if epi > 0.8 * episodes_n:
+                    step_size -= 0.01 / (episodes_n * 0.2)
+                Q[i][j] += max(step_size, 0) * (r_ij - Q[i][j])
             q_sum = sum(Q[i].values())
             for j in Q[i].keys():
                 w = (Q[i][j] / q_sum) * (1 - 1 / len(Q[i])) + 0.001
