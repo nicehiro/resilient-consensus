@@ -11,7 +11,7 @@ class LargeNet:
     def __init__(self) -> None:
         self.nodes_n = 1000
         self.bads_n = 100
-        self.connected_prob = 0.15
+        self.connected_prob = 0.01
         self.map = None
         self.make_map()
 
@@ -90,7 +90,7 @@ def q_consensus(**kwargs):
                 Q[i][j] += max(step_size, 0) * (r_ij - Q[i][j])
             q_sum = sum(Q[i].values())
             for j in Q[i].keys():
-                w = (Q[i][j] / q_sum) * (1 - 1 / len(Q[i])) + 0.001
+                w = (Q[i][j] / q_sum) * (1 - 1 / len(Q[i]))
                 env.map.update_by_weight(i, j, w)
             env.map.normalize(i)
         env.map.update_value_of_node(with_noise=kwargs['with_noise'])
