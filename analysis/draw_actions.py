@@ -18,9 +18,10 @@ def load_actions_of_node(path: str, x=2, y=4):
     """Load actions of node_i.
     """
     matplotlib.use('Agg')
-    env = Env(nodes_n=10, evil_nodes_type='2r1c')
+    env = Env(nodes_n=10, evil_nodes_type='2r1c', directed_graph=True)
     fig, axs = plt.subplots(x, y, constrained_layout=True, figsize=[10, 6])
     data = {}
+    colors = ['#001d4a', '#33261D', '#4f345a', '#eca400', '#6e8898', '#8f2d56', '#d2a1b8', '#e4fde1', '#ab81cd', '#6b2737']
     for file_name in os.listdir(path):
         if file_name.startswith('.'):
             continue
@@ -30,8 +31,8 @@ def load_actions_of_node(path: str, x=2, y=4):
         if node not in data:
             data[node] = []
         data[node].append(file_name)
-    bright_colors = ['#3498DB', '#2ECC71', '#FFC300', '#DAF7A6', '#E74C3C']
-    dark_colors = ['#0E6655', '#1A5276', '#873600']
+    # bright_colors = ['#3498DB', '#2ECC71', '#FFC300', '#DAF7A6', '#E74C3C']
+    # dark_colors = ['#0E6655', '#1A5276', '#873600']
     for node, file_names in data.items():
         pos_x, pos_y = (int(node)-3) // y, (int(node)-3) % y
         adjs_n = env.map.nodes[int(node)].neighbors_n
@@ -49,26 +50,24 @@ def load_actions_of_node(path: str, x=2, y=4):
                 alphas.append(1)
                 bad += 1
             labels.append('Adj {0}'.format(k))
-        labels.reverse()
-        colors = bright_colors[:good] + dark_colors[:bad]
+        # colors = bright_colors[:good] + dark_colors[:bad]
         df = pd.read_csv(os.path.join(path, file_name))
         for i, file_name in enumerate(file_names):
             df2 = pd.read_csv(os.path.join(path, file_name))
             df[file_name] = df2['Value']
         df['sum'] = df.iloc[:, 2:].sum(axis=1)
-        file_names.sort(reverse=True)
+        file_names.sort()
         for i, file_name in enumerate(file_names):
-            axs[pos_x][pos_y].plot(df['Step'], df[file_name] / df['sum'] * adjs_total_weight, color=colors[i])
+            axs[pos_x][pos_y].plot(df['Step'], df[file_name] / df['sum'] * adjs_total_weight, color=colors[env.map.weights_index_without_self[int(node)][i]])
         axs[pos_x][pos_y].legend(labels, loc='upper left', fontsize=8)
         axs[pos_x][pos_y].set_title('Node {0}'.format(node))
-        axs[pos_x][pos_y].set_xlabel('Times / M')
+        axs[pos_x][pos_y].set_xlabel('Times / Million')
         axs[pos_x][pos_y].set_ylabel('Actions(Weights)')
         axs[pos_x][pos_y].xaxis.set_major_formatter(tick.FuncFormatter(x_fmt))
     reward_path = os.path.join(path, 'rewards')
     # df = pd.read_csv(os.path.join(reward_path, '3r.csv'))
     file_names = os.listdir(reward_path)
     file_names.sort()
-    colors = dark_colors + bright_colors
     for i, file_name in enumerate(file_names):
         if file_name.startswith('.'):
             continue
@@ -83,7 +82,7 @@ def load_actions_of_node(path: str, x=2, y=4):
         # axs[1, 3].plot(df['Step'], df['Value'], alpha=0.5, color=colors[i])
     axs[1, 3].legend(['Node {0}'.format(i) for i in range(3, 11)], loc='upper left', fontsize=8)
     axs[1, 3].set_title('Rewards')
-    axs[1, 3].set_xlabel('Times / M')
+    axs[1, 3].set_xlabel('Times / Million')
     axs[1, 3].set_ylabel('Rewards')
     axs[1, 3].xaxis.set_major_formatter(tick.FuncFormatter(x_fmt))
     fig.suptitle('D-DDPG Training Processes')
@@ -92,5 +91,5 @@ def load_actions_of_node(path: str, x=2, y=4):
 
 
 if __name__ == '__main__':
-    load_actions_of_node('./data/ddpg-1r2c/')
+    load_actions_of_node('./data/directed-2r1c-csv/')
 
