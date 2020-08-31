@@ -2,6 +2,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
 from env import Env
+from car_adjust import CarEnv
 
 
 def concat_edges(env: Env):
@@ -12,7 +13,8 @@ def concat_edges(env: Env):
     return edges
 
 
-env = Env(nodes_n=10, evil_nodes_type='3r')
+# env = Env(nodes_n=10, evil_nodes_type='3r')
+env = CarEnv()
 
 matplotlib.use('Agg')
 G = nx.DiGraph()
@@ -21,9 +23,9 @@ G.add_edges_from(concat_edges(env))
 nx.draw(G,
         pos=nx.circular_layout(G),
         with_labels=True,
-        edge_color='b',
+        # edge_color='b',
         node_color=['#99A3A4' for _ in range(env.nodes_n-env.goods_n)] + ['green' for _ in range(env.goods_n)],
-        arrowstyle='-',
+        # arrowstyle='-',
         node_size=1500,
         font_size=14
         )
