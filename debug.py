@@ -29,7 +29,7 @@ if __name__ == '__main__':
     #              tolerance=10,
     #              save_csv=False,
     #              with_noise=False)
-    # q_consensus(reset_env=False, evil_nodes_type='2r1c', save_csv=True, with_noise=True, directed_graph=True)
+    q_consensus(reset_env=False, evil_nodes_type='2r1c', save_csv=True, with_noise=True, directed_graph=True)
     # batch_train(dqn_train, method='DQN', label='3c')
     # pg_train()
     # rival_maddpg_train(evil_nodes_type='maddpg')
@@ -47,17 +47,18 @@ if __name__ == '__main__':
     #              gamma=0.9,
     #              hidden_layer=3,
     #              hidden_size=256,
-    #              log_path='ddpg-3r-logs',
+    #              log_path='ddpg-directed-3r-logs',
     #              reset_env=True,
     #              train=True,
     #              save=False,
     #              evil_nodes_type='3r',
     #              tolerance=0.1,
     #              save_csv=False,
-    #              with_noise=False)
+    #              with_noise=False,
+    #              directed_graph=True)
 
     # ddpg 2 random 1 constant success method
-    # ddpg_train(episodes_n=1000,
+    # ddpg_train(episodes_n=1200,
     #              epochs_n=100,
     #              restore=False,
     #              memory_size=int(1e4),
@@ -68,35 +69,37 @@ if __name__ == '__main__':
     #              gamma=0.9,
     #              hidden_layer=3,
     #              hidden_size=256,
-    #              log_path='ddpg-2r1c-logs',
+    #              log_path='ddpg-directed-2r1c-logs',
     #              reset_env=True,
     #              train=True,
     #              save=False,
     #              evil_nodes_type='2r1c',
     #              tolerance=0.1,
     #              save_csv=False,
-    #              with_noise=False)
+    #              with_noise=False,
+    #              directed_graph=True)
 
     # ddpg 1 random 2 constant
-    ddpg_train(episodes_n=800,
-                 epochs_n=100,
-                 restore=False,
-                 memory_size=int(1e4),
-                 batch_size=64,
-                 actor_lr=0.0001,
-                 critic_lr=0.0001,
-                 polyak=0.9,
-                 gamma=0.9,
-                 hidden_layer=3,
-                 hidden_size=256,
-                 log_path='ddpg-1r2c-logs',
-                 reset_env=True,
-                 train=True,
-                 save=False,
-                 evil_nodes_type='1r2c',
-                 tolerance=0.1,
-                 save_csv=False,
-                 with_noise=False)
+    # ddpg_train(episodes_n=1200,
+    #              epochs_n=100,
+    #              restore=False,
+    #              memory_size=int(1e4),
+    #              batch_size=64,
+    #              actor_lr=0.0001,
+    #              critic_lr=0.0001,
+    #              polyak=0.9,
+    #              gamma=0.9,
+    #              hidden_layer=3,
+    #              hidden_size=256,
+    #              log_path='ddpg-directed-1r2c-logs',
+    #              reset_env=True,
+    #              train=True,
+    #              save=False,
+    #              evil_nodes_type='1r2c',
+    #              tolerance=0.1,
+    #              save_csv=False,
+    #              with_noise=False,
+    #              directed_graph=True)
 
     # ddpg 3 constant
     # ddpg_train(episodes_n=800,
@@ -110,14 +113,15 @@ if __name__ == '__main__':
     #              gamma=0.9,
     #              hidden_layer=3,
     #              hidden_size=256,
-    #              log_path='ddpg-3c-logs',
+    #              log_path='ddpg-directed-3c-logs',
     #              reset_env=True,
     #              train=True,
     #              save=False,
     #              evil_nodes_type='3c',
     #              tolerance=0.1,
     #              save_csv=False,
-    #              with_noise=False)
+    #              with_noise=False,
+    #              directed_graph=True)
 
     # rival ddpg vs ddpg 
     # rival_ddpg_train(episodes_n=800,

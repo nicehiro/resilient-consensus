@@ -19,7 +19,7 @@ def q_consensus(**kwargs):
     step_size = 0.01
     if kwargs['save_csv']:
         df = pd.DataFrame(columns=['Node{0}'.format(i) for i in range(env.nodes_n)])
-    episodes_n = 2000
+    episodes_n = 1000
     for epi in range(episodes_n):
         if kwargs['save_csv']:
             df = df.append(env.map.node_val(), ignore_index=True)

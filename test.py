@@ -7,6 +7,7 @@ from rival.ddpg_vs_ddpg.train import train as rival_maddpg
 from rival.qnew_vs_ddpg.train import train as rival_qnew
 from utils import batch_train
 import argparse
+from env import Env
 
 
 def str2bool(value):
@@ -18,6 +19,18 @@ def str2bool(value):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def check_done(env: Env, with_noise: bool, tolerance: float=0.05):
+    d, t = 0, 0
+    for i in range(100):
+        env.map.update_value_of_node(with_noise=with_noise)
+        start = env.nodes_n - env.goods_n
+        for i in range(start, env.nodes_n):
+            for j in range(i+1, env.nodes_n):
+                d += abs(env.map.nodes[i].v - env.map.nodes[j].v)
+                t += 1
+    return d / t < tolerance
 
 
 if __name__ == '__main__':
@@ -78,7 +91,7 @@ if __name__ == '__main__':
             with_noise=args.with_noise,
             directed_graph=args.directed_graph,
         )
-        if env.is_done(tolerance):
+        if check_done(env, with_noise=args.with_noise, tolerance=tolerance):
             success_times += 1
         else:
             failed_times += 1

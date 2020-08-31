@@ -273,7 +273,7 @@ class Env:
             nodes[0].weights = {0: 1}
             nodes[1].weights = {1: 1}
             nodes[2].weights = {2: 1}
-            nodes[3].weights = {0: 2, 1: 0.2, 3: 0.2, 4: 0.2, 7: 0.2}
+            nodes[3].weights = {0: 0.166, 1: 0.166, 3: 0.166, 4: 0.166, 7: 0.166, 9: 0.166}
             nodes[4].weights = {2: 0.25, 4: 0.25, 5: 0.25, 8: 0.25}
             nodes[5].weights = {2: 0.33, 3: 0.33, 5: 0.33}
             nodes[6].weights = {1: 0.25, 4: 0.25, 5: 0.25, 6: 0.25}
@@ -341,8 +341,6 @@ class Env:
             d = 0
             for j, w in self.map.nodes[node_i].weights.items():
                 d += abs(self.map.nodes[j].v - self.map.nodes[node_i].v) * w
-            # ddpg 3r 
-            # r = 1 * (math.exp(-20 * d) - 0.5)
             r = 1 * (math.exp(-20 * d) - 0.5)
         elif property is Property.MADDPG:
             d = 0

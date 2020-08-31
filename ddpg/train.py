@@ -11,7 +11,7 @@ from utils import normalize
 
 
 def train(**kwargs):
-    env = Env(nodes_n=10, evil_nodes_type=kwargs['evil_nodes_type'], reset_env=kwargs['reset_env'])
+    env = Env(nodes_n=10, evil_nodes_type=kwargs['evil_nodes_type'], reset_env=kwargs['reset_env'], directed_graph=kwargs['directed_graph'])
     writer = SummaryWriter(kwargs['log_path'])
     agents = [Agent(node_i=i,
                     observation_space=Box(low=0, high=1, shape=[env.features_n[i], ], dtype=np.float32),
@@ -99,10 +99,6 @@ def train(**kwargs):
             # Super critical, easy to overlook step: make sure to update
             # most recent observation!
             o = o_
-
-            # ac.save()
-            o, ep_len = o_, 0
-            ep_ret = [0 for _ in range(10)]
 
             if kwargs['train']:
                 # Update handling
