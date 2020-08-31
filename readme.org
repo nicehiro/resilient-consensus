@@ -1,35 +1,23 @@
 * Opinions
 
-** 特性
-- 普通强化学习对于不同的状态应该有一个相对应的最有输出，而应用到节点识别上的强化学习，不管在什么状态下，都只有唯一固定的最优输出（让坏节点权重减少，好节点权重增加）
-
-** 问题
-- 梯度爆炸。Loss 值特别大，两次
-
 ** RL based
 *** DQN
-将 DQN 的方法直接运用到节点收敛问题上，目前两种方法实现：
-- FAILED 没有经验池的概念，对每一步都进行网络更新
-- 使用经验池，使用大量数据训练网络，直到网络训练的差不多，使用训练好的网络进行测试
-
-*** PG
-将 PG 的方法直接运用到节点收敛问题上，目前两种方法实现：
-- FAILED 没有经验池的概念，对每一步都进行网络更新
-- 使用经验池，使用大量数据训练网络，直到网络训练的差不多，使用训练好的网络进行测试
+DQN agent for each agent in MARC.
+- FAILED No replay buffer, update every timestamp, idea mostly from normal MARC solve methods.
+- DIDNT TEST Use replay buffer, idea mostly from RL methods.
 
 *** DDPG
-将 DDPG 的方法直接运用到节点收敛问题上，目前两种方法实现：
-- FAILED 没有经验池的概念，对每一步都进行网络更新
-- 使用经验池，使用大量数据训练网络，直到网络训练的差不多，使用训练好的网络进行测试
+DDPG agent for each agent in MARC.
+- FAILED No replay buffer, update every timestamp.
+- SUCCESS With replay buffer. But still get big varience, gradient explosion.
 
-*** NEW MADDPG
-- 由于当前环境中每个智能体都可以进行决策，破坏了马尔可夫性质，所以当前的学习方法不适合，应该使用 MADDPG 尝试一下。
-
-** Q_New
-提出的新算法的实现。
+** Q Consensus
+Suitable for different faulty nodes. Stable.
 
 ** Battle
 
-*** MADDPG vs MADDPG
+*** DDPG for good nodes vs. DDPG for bad nodes
+Balenced.
 
-*** Q_New vs MADDPG
+*** Q Consensus vs DDPG
+Q Consensus only needs 1000 timestamps to get consensus. But DDPG needs much more time to finish training, and DDPG is very unstable. So Q Consensush is the winner.
