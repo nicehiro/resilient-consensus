@@ -62,7 +62,7 @@ def q_consensus(**kwargs):
                 Q[i][j] += max((step_size), 0) * (r_ij - Q[i][j])
             q_sum = sum(Q[i].values())
             for j in Q[i].keys():
-                w = (Q[i][j] / q_sum) * (1 - 1 / len(Q[i])) + 0.001
+                w = (Q[i][j] / q_sum) * (1 - 1 / len(Q[i]))
                 env.map.update_by_weight(i, j, w)
             env.map.normalize(i)
         env.map.update_value_of_node(with_noise=kwargs['with_noise'])
