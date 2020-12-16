@@ -5,6 +5,7 @@ from q_new.train import q_consensus as q_new
 from maddpg.train import train as maddpg_train
 from rival.ddpg_vs_ddpg.train import train as rival_maddpg
 from rival.qnew_vs_ddpg.train import train as rival_qnew
+from dynamic.q_consensus import q_consensus as dynamic_q_consensus
 from utils import batch_train
 import argparse
 from env import Env
@@ -13,59 +14,69 @@ from env import Env
 def str2bool(value):
     if isinstance(value, bool):
         return value
-    if value.lower() in ('yes', 'true', 't', 'y', '1'):
+    if value.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif value.lower() in ('no', 'false', 'f', 'n', 0):
+    elif value.lower() in ("no", "false", "f", "n", 0):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
-def check_done(env: Env, with_noise: bool, tolerance: float=0.05):
+def check_done(env: Env, with_noise: bool, tolerance: float = 0.05):
     d, t = 0, 0
     for i in range(100):
         env.map.update_value_of_node(with_noise=with_noise)
         start = env.nodes_n - env.goods_n
         for i in range(start, env.nodes_n):
-            for j in range(i+1, env.nodes_n):
+            for j in range(i + 1, env.nodes_n):
                 d += abs(env.map.nodes[i].v - env.map.nodes[j].v)
                 t += 1
     return d / t < tolerance
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--episodes', type=int, help='Episodes times.')
-    parser.add_argument('--epochs', type=int, help='Epochs times of each episode.')
-    parser.add_argument('--restore', type=str2bool, help='Restore trained model.')
-    parser.add_argument('--need_exploit', type=str2bool, help='Use random policy to exploit.')
-    parser.add_argument('--batch_size', type=int, help='Batch size.')
-    parser.add_argument('--memory_size', type=int, help='Replay buffer size.')
-    parser.add_argument('--train', type=str2bool, help='Optimize model.')
-    parser.add_argument('--lr', type=float, help='Learning rate.')
-    parser.add_argument('--actor_lr', type=float, help='Actor network learning rate.')
-    parser.add_argument('--critic_lr', type=float, help='Critic network learning rate.')
-    parser.add_argument('--polyak', type=float, help='Update net params.')
-    parser.add_argument('--noise_scale', type=float, help='Noise scale.')
-    parser.add_argument('--hidden_size', type=int, help='Layer hidden size.')
-    parser.add_argument('--hidden_layer', type=int, help='Hidden layer nums.')
-    parser.add_argument('--log', type=str2bool, help='Tensorboard log file.')
-    parser.add_argument('--log_path', type=str, help='Tensorboard log file path.')
-    parser.add_argument('--reset_env', type=str2bool, help='Reset env.')
-    parser.add_argument('--batch_num', type=int, default=1, help='Batch number.')
-    parser.add_argument('--save', type=str2bool, help='Save trained model.')
-    parser.add_argument('--evil_nodes_type', type=str, help='Evil nodes type. 3r, 2r1c, 1r2c etc.')
-    parser.add_argument('--train_method', type=str, help='Train method. DQN, DDPG .etc.')
-    parser.add_argument('--tolerance', type=float, help='Done tolerance.')
-    parser.add_argument('--save_csv', type=str2bool, help='Save csv')
-    parser.add_argument('--with_noise', type=str2bool, help='Update node value with noise.')
-    parser.add_argument('--directed_graph', type=str2bool, help='Use directed graph or not.')
+    parser.add_argument("--episodes", type=int, help="Episodes times.")
+    parser.add_argument("--epochs", type=int, help="Epochs times of each episode.")
+    parser.add_argument("--restore", type=str2bool, help="Restore trained model.")
+    parser.add_argument(
+        "--need_exploit", type=str2bool, help="Use random policy to exploit."
+    )
+    parser.add_argument("--batch_size", type=int, help="Batch size.")
+    parser.add_argument("--memory_size", type=int, help="Replay buffer size.")
+    parser.add_argument("--train", type=str2bool, help="Optimize model.")
+    parser.add_argument("--lr", type=float, help="Learning rate.")
+    parser.add_argument("--actor_lr", type=float, help="Actor network learning rate.")
+    parser.add_argument("--critic_lr", type=float, help="Critic network learning rate.")
+    parser.add_argument("--polyak", type=float, help="Update net params.")
+    parser.add_argument("--noise_scale", type=float, help="Noise scale.")
+    parser.add_argument("--hidden_size", type=int, help="Layer hidden size.")
+    parser.add_argument("--hidden_layer", type=int, help="Hidden layer nums.")
+    parser.add_argument("--log", type=str2bool, help="Tensorboard log file.")
+    parser.add_argument("--log_path", type=str, help="Tensorboard log file path.")
+    parser.add_argument("--reset_env", type=str2bool, help="Reset env.")
+    parser.add_argument("--batch_num", type=int, default=1, help="Batch number.")
+    parser.add_argument("--save", type=str2bool, help="Save trained model.")
+    parser.add_argument(
+        "--evil_nodes_type", type=str, help="Evil nodes type. 3r, 2r1c, 1r2c etc."
+    )
+    parser.add_argument(
+        "--train_method", type=str, help="Train method. DQN, DDPG .etc."
+    )
+    parser.add_argument("--tolerance", type=float, help="Done tolerance.")
+    parser.add_argument("--save_csv", type=str2bool, help="Save csv")
+    parser.add_argument(
+        "--with_noise", type=str2bool, help="Update node value with noise."
+    )
+    parser.add_argument(
+        "--directed_graph", type=str2bool, help="Use directed graph or not."
+    )
     args = parser.parse_args()
     batch_num = args.batch_num
     tolerance = args.tolerance
     success_times = failed_times = 0
     for i in range(batch_num):
-        print('Train Times: {0}'.format(i))
+        print("Train Times: {0}".format(i))
         env = eval(args.train_method)(
             episodes_n=args.episodes,
             epochs_n=args.epochs,
@@ -95,8 +106,10 @@ if __name__ == '__main__':
             success_times += 1
         else:
             failed_times += 1
-            print(env.map)
-        print('Success Times: {0}\tFalied Times: {1}'.format(success_times, failed_times))
+            # print(env.map)
+        print(
+            "Success Times: {0}\tFalied Times: {1}".format(success_times, failed_times)
+        )
     # batch_train(dqn_train, method='DQN', label='2c')
     # pg_train()
     # ddpg_train()

@@ -6,10 +6,11 @@ from utils import batch_train
 from maddpg.train import train as maddpg_train
 from rival.ddpg_vs_ddpg.train import train as rival_ddpg_train
 from rival.qnew_vs_ddpg.train import train as rival_qnew_train
+from switcher.q_consensus import q_consensus as dynamic_q_consensus
 import argparse
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # dqn_train(restore=False, need_exploit=True, train=True, hidden_layer=3, hidden_size=256,
     #           batch_size=2, memory_size=2, reset_env=False)
     # maddpg_train(episodes_n=300,
@@ -29,7 +30,14 @@ if __name__ == '__main__':
     #              tolerance=10,
     #              save_csv=False,
     #              with_noise=False)
-    q_consensus(reset_env=False, evil_nodes_type='2r1c', save_csv=True, with_noise=True, directed_graph=True)
+    dynamic_q_consensus(
+        reset_env=False,
+        evil_nodes_type="3r",
+        save_csv=False,
+        with_noise=True,
+        directed_graph=True,
+    )
+    # q_consensus(reset_env=False, evil_nodes_type='2r1c', save_csv=True, with_noise=True, directed_graph=True)
     # batch_train(dqn_train, method='DQN', label='3c')
     # pg_train()
     # rival_maddpg_train(evil_nodes_type='maddpg')
@@ -123,7 +131,7 @@ if __name__ == '__main__':
     #              with_noise=False,
     #              directed_graph=True)
 
-    # rival ddpg vs ddpg 
+    # rival ddpg vs ddpg
     # rival_ddpg_train(episodes_n=800,
     #                  epochs_n=100,
     #                  restore=False,
