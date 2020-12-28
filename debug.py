@@ -7,6 +7,7 @@ from maddpg.train import train as maddpg_train
 from rival.ddpg_vs_ddpg.train import train as rival_ddpg_train
 from rival.qnew_vs_ddpg.train import train as rival_qnew_train
 from switcher.q_consensus import q_consensus as dynamic_q_consensus
+from modified_rl.train import train as modified_rl_train
 import argparse
 
 
@@ -30,13 +31,26 @@ if __name__ == "__main__":
     #              tolerance=10,
     #              save_csv=False,
     #              with_noise=False)
-    dynamic_q_consensus(
-        reset_env=False,
+    modified_rl_train(
+        log_path="logs/modified_rl/",
         evil_nodes_type="3r",
-        save_csv=False,
-        with_noise=True,
         directed_graph=True,
+        memory_size=1000,
+        actor_lr=1e-3,
+        restore_path="trained/",
+        batch_size=640,
+        epochs_n=1000,
+        episodes_n=100,
+        update_after=10,
+        update_every=10,
     )
+    # dynamic_q_consensus(
+    #     reset_env=False,
+    #     evil_nodes_type="3r",
+    #     save_csv=False,
+    #     with_noise=True,
+    #     directed_graph=True,
+    # )
     # q_consensus(reset_env=False, evil_nodes_type='2r1c', save_csv=True, with_noise=True, directed_graph=True)
     # batch_train(dqn_train, method='DQN', label='3c')
     # pg_train()
