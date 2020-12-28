@@ -60,6 +60,7 @@ class Map:
         self.nodes_n = len(nodes)
         self.matrix = self.__adja_matrix()
         self.weights_index = [[] for _ in range(self.nodes_n)]
+        self.node_index_of_weights = [-1 for _ in range(self.nodes_n)]
         self.__calc_weights_index()
 
     def __adja_matrix(self):
@@ -176,6 +177,8 @@ class Map:
     def __calc_weights_index(self):
         for i in range(self.nodes_n):
             for j in range(self.nodes_n):
+                if i == j:
+                    self.node_index_of_weights[i] = len(self.weights_index[i])
                 if self.matrix[i][j] > 0:
                     self.weights_index[i].append(j)
 
