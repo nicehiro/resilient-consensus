@@ -29,6 +29,32 @@ class Node:
         """
         raise NotImplementedError("You should implement this method before use it.")
 
+    def _hard_distance(self):
+        """Calc real distance between adjacent nodes.
+
+        Returns:
+            float: distance
+        """
+        if not self.weights:
+            raise Exception("You should init weights before use it.")
+        d = 0
+        for adj, _ in self.weights:
+            d += abs(adj.value - self.value)
+        return d
+
+    def _soft_distance(self):
+        """Calc soft distance aka. weighted distance, between adjacent nodes.
+
+        Returns:
+            float: distance
+        """
+        if not self.weights:
+            raise Exception("You should init weights before use it.")
+        d = 0
+        for adj, w in self.weights:
+            d += abs(adj.value - self.value) * w
+        return d
+
     def set_weight(self, weights: Dict):
         self.weights = weights
 
@@ -68,13 +94,17 @@ class NormalNode(Node):
                 continue
             self.weights[adj] = weights[i]
             i += 1
+        # normalize weights
         self.normalize()
 
     def normalize(self):
-        rest_total = 1 - (1 / n)
+        if not self.weights:
+            raise Exception("You should init weights first.")
+        rest_total = 1 - (1 / len(self.weights))
         for adj, w in self.weights:
             if adj.index == self.index:
                 continue
+            self.weights[adj] = w / rest_total
 
 
 class RandomNode(Node):

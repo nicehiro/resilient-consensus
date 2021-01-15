@@ -1,7 +1,10 @@
-from attribute import Attribute
-from topology import Topology
+import math
+
 import gym
 import numpy as np
+
+from attribute import Attribute
+from topology import Topology
 
 
 class Env(gym.Env):
@@ -26,6 +29,8 @@ class Env(gym.Env):
     def step(self, actions):
         """Execute actions for each node.
 
+        Return reward, next_state.
+
         Args:
             actions ([List]): List of actions for each node.
         """
@@ -35,10 +40,18 @@ class Env(gym.Env):
             node.update_weight(action)
         for node in self.topology.nodes:
             node.update_value()
+        return self._reward(), self._state()
 
     def reset(self):
-        states = []
+        """Reset env.
+
+        Reset node value to random, weights to mean weights.
+        """
         self.topology.reset()
+        return self._state()
+
+    def _state(self):
+        states = []
         for i, node in enumerate(self.topology.nodes):
             state = np.zeros(shape=[self.features_n[i]])
             for adj, _ in node.weights:
@@ -47,4 +60,19 @@ class Env(gym.Env):
         return states
 
     def render(self):
+        """TODO: Draw image of current topology.
+
+        Image contains node, node value, adj weights.
+        """
         pass
+
+    def _reward(self):
+        """Calc rewards for all node."""
+        rewards = []
+        for node in self.topology.nodes:
+            if node.attribute is Attribute.NORMAL:
+                d = node._soft_distance()
+                r = 1 * (math.exp(-20 * d) - 0.5)
+                rewards.append(r)
+            rewards.append(None)
+        return rewards
