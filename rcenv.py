@@ -1,4 +1,5 @@
 import math
+import random
 
 import gym
 import numpy as np
@@ -14,6 +15,7 @@ class Env(gym.Env):
         self.n = self.topology.n
         self.features_n = []
         self.actions_n = []
+        self.has_noise = has_noise
         self._calc_dim()
 
     def _calc_dim(self):
@@ -22,6 +24,7 @@ class Env(gym.Env):
             if node.attribute is not Attribute.NORMAL:
                 self.features_n.append(None)
                 self.actions_n.append(None)
+                continue
             n = len(node.weights)
             self.features_n.append(n)
             self.actions_n.append(n - 1)
@@ -53,9 +56,12 @@ class Env(gym.Env):
     def _state(self):
         states = []
         for i, node in enumerate(self.topology.nodes):
+            if not self.features_n[i]:
+                states.append(None)
+                continue
             state = np.zeros(shape=[self.features_n[i]])
-            for adj, _ in node.weights:
-                state.append(adj.value)
+            for j, adj in enumerate(node.weights.keys()):
+                state[j] = adj.value
             states.append(state)
         return states
 
@@ -76,3 +82,35 @@ class Env(gym.Env):
                 rewards.append(r)
             rewards.append(None)
         return rewards
+
+
+if __name__ == "__main__":
+    adj_matrix = [
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0],
+        [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
+        [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0],
+        [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+        [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+    ]
+    node_attrs = [
+        Attribute.RANDOM,
+        Attribute.CONSTANT,
+        Attribute.RANDOM,
+        Attribute.CONSTANT,
+    ] + [Attribute.NORMAL for _ in range(8)]
+    env = Env(adj_matrix, node_attrs)
+    s = env.reset()
+    while True:
+        print(env.topology)
+        actions = [
+            [random.random() for _ in range(sum(adj_matrix[i]) - 1)] for i in range(12)
+        ]
+        s_, r = env.step(actions)
+        s = s_

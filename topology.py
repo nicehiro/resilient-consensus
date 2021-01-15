@@ -16,9 +16,9 @@ class Topology:
             times: default times is 1, means node value between 0 to 1.
         """
         self.nodes = []
-        self.n = len(self.nodes)
         self.times = times
         self._generate_topo(adjacency_matrix, node_attrs)
+        self.n = len(self.nodes)
 
     def _generate_topo(self, adj_maxtrix: List[List], node_attrs: List):
         """Generate topology.
@@ -43,11 +43,21 @@ class Topology:
             node = self.nodes[i]
             n = sum(adjs)
             weights = {}
+            adjacents = []
             for j, adj in enumerate(adjs):
                 if adj == 1:
                     weights[self.nodes[j]] = 1 / n
+                    if j != i:
+                        adjacents.append(j)
+            node.adjacents = adjacents
             node.set_weight(weights)
 
     def reset(self):
         for node in self.nodes:
             node.reset()
+
+    def __str__(self) -> str:
+        str = ""
+        for node in self.nodes:
+            str += node.__str__() + "\n"
+        return str
