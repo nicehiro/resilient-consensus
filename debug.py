@@ -33,8 +33,6 @@ if __name__ == "__main__":
     #              with_noise=False)
     modified_rl_train(
         log_path="logs/modified_rl/",
-        evil_nodes_type="3r",
-        directed_graph=True,
         memory_size=1000,
         actor_lr=1e-3,
         restore_path="trained/",

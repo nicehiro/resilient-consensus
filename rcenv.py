@@ -60,8 +60,9 @@ class Env(gym.Env):
                 states.append(None)
                 continue
             state = np.zeros(shape=[self.features_n[i]])
-            for j, adj in enumerate(node.weights.keys()):
-                state[j] = adj.value
+            state[0] = node.value
+            for j, adj_index in enumerate(node.adjacents):
+                state[j + 1] = self.topology.nodes[adj_index].value
             states.append(state)
         return states
 

@@ -14,7 +14,6 @@ class Agent:
         buffer_size,
         lr,
         gamma,
-        evil_nodes_type,
         node_i,
         restore_path,
         batch_size,
@@ -30,16 +29,13 @@ class Agent:
             activation=nn.ReLU,
             act_limit=1,
         )
-        self.evil_nodes_type = evil_nodes_type
         self.node_i = node_i
         self.value = value
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr)
         self.batch_size = batch_size
         self.gamma = gamma
         self.node_index_of_weights = node_index_of_weights
-        self.restore_path = restore_path + "{0}/{1}".format(
-            self.evil_nodes_type, self.node_i
-        )
+        self.restore_path = restore_path + "{0}".format(self.node_i)
 
     def update_value(self, value):
         self.value = value
@@ -72,7 +68,7 @@ class Agent:
         )
         self.optimizer.zero_grad()
         v = o[:, self.node_index_of_weights].unsqueeze(dim=-1)
-        d = torch.sum(abs(o - v) * a, dim=1)
+        d = torch.sum(abs(o[:, self.node_index_of_weights + 1 :] - v) * a, dim=1)
         r = torch.exp(-20 * d)
         loss = -torch.mean(r)
         loss.backward()
