@@ -61,3 +61,13 @@ class Topology:
         for node in self.nodes:
             str += node.__str__() + "\n"
         return str
+
+    def update_value(self):
+        for node in self.nodes:
+            node.update_value()
+
+    def node_val(self):
+        res = {}
+        for i, node in enumerate(self.nodes):
+            res["Node{0}".format(i)] = node.value
+        return res

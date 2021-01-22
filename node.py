@@ -30,6 +30,15 @@ class Node:
         """
         raise NotImplementedError("You should implement this method before use it.")
 
+    def update_weight_by_adj(self, adj, weights):
+        if not adj:
+            raise Exception("Adj should be a Node instance.")
+        if not self.weights:
+            raise Exception("You should init weights before use it.")
+        if adj not in self.weights.keys():
+            raise Exception("Adj is not node's adjacent.")
+        self.weights[adj] = weights
+
     def _hard_distance(self):
         """Calc real distance between adjacent nodes.
 

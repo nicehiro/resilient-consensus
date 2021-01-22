@@ -23,10 +23,10 @@ def train(**kwargs):
         [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
     ]
     node_attrs = [
-        Attribute.RANDOM,
-        Attribute.RANDOM,
-        Attribute.RANDOM,
-        Attribute.RANDOM,
+        Attribute.CONSTANT,
+        Attribute.CONSTANT,
+        Attribute.CONSTANT,
+        Attribute.CONSTANT,
     ] + [Attribute.NORMAL for _ in range(8)]
     env = Env(adj_matrix, node_attrs)
 
@@ -57,14 +57,14 @@ def train(**kwargs):
     for epoch in range(epochs_n):
         # sample init value of x
         o = env.reset()
+        acts = [None for _ in range(bads_n)] + [
+            np.full(
+                (1, len(env.topology.nodes[i + bads_n].adjacents)),
+                1 / len(env.topology.nodes[i + bads_n].adjacents),
+            ).squeeze()
+            for i in range(goods_n)
+        ]
         for episode in range(episodes_n):
-            acts = [None for _ in range(bads_n)] + [
-                np.full(
-                    (1, len(env.topology.nodes[i + bads_n].adjacents)),
-                    1 / len(env.topology.nodes[i + bads_n].adjacents),
-                ).squeeze()
-                for i in range(goods_n)
-            ]
             for i, normal in enumerate(normals):
                 a = normal.act(o[i + bads_n], acts[i + bads_n])
                 acts[i + bads_n] = a

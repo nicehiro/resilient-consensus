@@ -5,10 +5,10 @@ from q_new.train import q_consensus as q_new
 from maddpg.train import train as maddpg_train
 from rival.ddpg_vs_ddpg.train import train as rival_maddpg
 from rival.qnew_vs_ddpg.train import train as rival_qnew
-from dynamic.q_consensus import q_consensus as dynamic_q_consensus
+from switcher.q_consensus import q_consensus as dynamic_q_consensus
 from utils import batch_train
 import argparse
-from env import Env
+from rcenv import Env
 
 
 def str2bool(value):
@@ -25,11 +25,11 @@ def str2bool(value):
 def check_done(env: Env, with_noise: bool, tolerance: float = 0.05):
     d, t = 0, 0
     for i in range(100):
-        env.map.update_value_of_node(with_noise=with_noise)
-        start = env.nodes_n - env.goods_n
-        for i in range(start, env.nodes_n):
-            for j in range(i + 1, env.nodes_n):
-                d += abs(env.map.nodes[i].v - env.map.nodes[j].v)
+        env.topology.update_value()
+        start = 4
+        for i in range(start, env.n):
+            for j in range(i + 1, env.n):
+                d += abs(env.topology.nodes[i].value - env.topology.nodes[j].value)
                 t += 1
     return d / t < tolerance
 

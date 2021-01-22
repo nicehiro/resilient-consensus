@@ -5,29 +5,44 @@ from analysis.save import save_nodes_value
 
 
 if torch.cuda.is_available():
-    dev = 'cuda:0'
+    dev = "cuda:0"
 else:
-    dev = 'cpu'
-    
+    dev = "cpu"
+
 
 device = torch.device(dev)
 
 
-def summary_writer(log_path='log'):
+adjacent_matrix = [
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0],
+    [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+    [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0],
+    [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+]
+
+
+def summary_writer(log_path="log"):
     # summary writer for tensorboard
-    return SummaryWriter('logs')
+    return SummaryWriter("logs")
 
 
 def normalize(data):
-    """Normalize data.
-    """
+    """Normalize data."""
     data = np.array(data, dtype=np.float32)
     mean = data.mean()
     std = np.std(data)
     return (data - mean) / std
 
 
-def batch_train(train, method='DQN', label='1r2c', n=1000):
+def batch_train(train, method="DQN", label="1r2c", n=1000):
     """Train a batch of episode, when they convergence or
     train steps get a certain number stop train.
 
@@ -49,5 +64,11 @@ def batch_train(train, method='DQN', label='1r2c', n=1000):
         else:
             failed_n += 1
         print(env.map.node_val())
-        print('Test Numbers: {0}\nSuccess Numbers: {1}\tFailed Numbers: {2}'.format(n, success_n, failed_n))
-        save_nodes_value(env.map, method, env.is_done(), label, path='data/nodes_values.csv')
+        print(
+            "Test Numbers: {0}\nSuccess Numbers: {1}\tFailed Numbers: {2}".format(
+                n, success_n, failed_n
+            )
+        )
+        save_nodes_value(
+            env.map, method, env.is_done(), label, path="data/nodes_values.csv"
+        )
