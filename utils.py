@@ -3,14 +3,27 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 from analysis.save import save_nodes_value
 
-
 if torch.cuda.is_available():
     dev = "cuda:0"
 else:
     dev = "cpu"
 
-
 device = torch.device(dev)
+
+adjacent_matrix = [
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0],
+    [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+    [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0],
+    [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+]
 
 
 adjacent_matrix = [
