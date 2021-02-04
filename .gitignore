@@ -16,3 +16,4 @@ settings.json
 *.csv
 figures/
 *.eps
+.direnv/
