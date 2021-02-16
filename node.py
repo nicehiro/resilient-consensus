@@ -77,6 +77,9 @@ class Node:
             for adj, _ in self.weights.items():
                 self.weights[adj] = mean_w
 
+    def normalize(self, w_sum):
+        pass
+
     def __str__(self) -> str:
         str = "Node {0}\tValue: {1}\n\n".format(self.index, self.value)
         for adj, w in self.weights.items():

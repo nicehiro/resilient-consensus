@@ -4,31 +4,20 @@ from torch.utils.tensorboard import SummaryWriter
 from modified_rl.agent import Agent
 import numpy as np
 from attribute import Attribute
+from utils import adjacent_matrix
 
 
 def train(**kwargs):
+    """Using modified to train a model make bad node's weight smaller enough.
+    """
     writer = SummaryWriter(log_dir=kwargs["log_path"])
-    adj_matrix = [
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0],
-        [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
-        [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
-        [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0],
-        [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
-        [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
-    ]
     node_attrs = [
         Attribute.CONSTANT,
         Attribute.CONSTANT,
         Attribute.CONSTANT,
         Attribute.CONSTANT,
     ] + [Attribute.NORMAL for _ in range(8)]
-    env = Env(adj_matrix, node_attrs)
+    env = Env(adjacent_matrix, node_attrs)
 
     bads_n = 4
     goods_n = 8
@@ -111,3 +100,17 @@ def train(**kwargs):
                 {"Node {0}".format(i): l for i, l in enumerate(loss)},
                 epoch,
             )
+
+
+if __name__ == '__main__':
+    train(
+        log_path="logs/modified_rl/",
+        memory_size=1000,
+        actor_lr=1e-3,
+        restore_path="trained/",
+        batch_size=640,
+        epochs_n=2000,
+        episodes_n=50,
+        update_after=10,
+        update_every=10,
+    )
