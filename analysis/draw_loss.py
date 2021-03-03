@@ -3,21 +3,22 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-# matplotlib.use('agg')
+matplotlib.use("Agg")
+plt.style.use(["science", "ieee"])
 
-fig, (ax, ax2) = plt.subplots(2, 1, sharex=true, facecolor='w')
+fig, (ax, ax2) = plt.subplots(2, 1, sharex=True, facecolor="w")
 
-df = pd.read_csv('./data/large_net.csv')
+df = pd.read_csv("./analysis/data/large_net.csv")
 
-ax.plot(df['step'][:], df['value'][:])
-ax2.plot(df['step'][:], df['value'][:])
+ax.plot(df["Step"][:], df["Value"][:])
+ax2.plot(df["Step"][:], df["Value"][:])
 ax.set_ylim(12, 13)
 ax2.set_ylim(0, 2)
 
-ax.spines['bottom'].set_visible(false)
-ax2.spines['top'].set_visible(false)
+ax.spines["bottom"].set_visible(False)
+ax2.spines["top"].set_visible(False)
 ax.xaxis.tick_top()
-ax.tick_params(labeltop=false)  # don't put tick labels at the top
+ax.tick_params(labeltop=False)  # don't put tick labels at the top
 ax2.xaxis.tick_bottom()
 
 # this looks pretty good, and was fairly painless, but you can get that
@@ -28,13 +29,13 @@ ax2.xaxis.tick_bottom()
 # appropriate corners of each of our axes, and so long as we use the
 # right transform and disable clipping.
 
-d = .001  # how big to make the diagonal lines in axes coordinates
+d = 0.02  # how big to make the diagonal lines in axes coordinates
 # arguments to pass to plot, just so we don't keep repeating them
-kwargs = dict(transform=ax.transaxes, color='k', clip_on=false)
-ax.plot((-d, +d), (-d, +d), **kwargs)        # top-left diagonal
+kwargs = dict(transform=ax.transAxes, color="k", clip_on=False, linewidth=0.5)
+ax.plot((-d, +d), (-d, +d), **kwargs)  # top-left diagonal
 ax.plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
 
-kwargs.update(transform=ax2.transaxes)  # switch to the bottom axes
+kwargs.update(transform=ax2.transAxes)  # switch to the bottom axes
 ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)  # bottom-left diagonal
 ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)  # bottom-right diagonal
 
@@ -43,9 +44,9 @@ ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)  # bottom-right diagonal
 # the diagonal lines will move accordingly, and stay right at the tips
 # of the spines they are 'breaking'
 
-ax.set_title('large scale network loss')
-ax2.set_xlabel('times')
-fig.text(0.04, 0.5, 'convergence index', va='center', rotation='vertical')
+ax.set_title("large scale network loss")
+ax2.set_xlabel("times")
+fig.text(0.04, 0.5, "convergence index", va="center", rotation="vertical")
 
 plt.show()
-plt.savefig('large-net.eps', format='eps')
+plt.savefig("large-net.eps", format="eps")
