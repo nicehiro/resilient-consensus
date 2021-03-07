@@ -1,0 +1,30 @@
+{
+	"include": [
+			"analysis",
+			"ddpg",
+			"modified_rl",
+			"q_new",
+			"switcher"
+	],
+
+	"exclude": [
+		"**/__pycache__",
+	],
+
+	"ignore": [
+	],
+
+	"reportMissingImports": true,
+	"reportMissingTypeStubs": false,
+
+	"pythonVersion": "3.8",
+	"pythonPlatform": "Mac",
+
+	"executionEnvironments": [
+		{
+			"root": ".",
+			"pythonVersion": "3.8",
+			"pythonPlatform": "Mac",
+		},
+	]
+}
