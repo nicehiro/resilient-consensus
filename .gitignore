@@ -1,3 +1,4 @@
+get-pip.py
 *.pkl
 venv/
 .idea/
@@ -14,4 +15,4 @@ settings.json
 *logs/
 .VSCodeCounter/
 *.csv
-figures/
+figures*/
