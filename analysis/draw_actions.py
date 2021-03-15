@@ -6,7 +6,7 @@ import matplotlib.ticker as tick
 import matplotlib
 import numpy as np
 
-from scipy.interpolate import make_interp_spline, BSpline
+# from scipy.interpolate import make_interp_spline, BSpline
 
 
 def x_fmt(tick_val, pos):
@@ -18,9 +18,22 @@ def load_actions_of_node(path: str, x=2, y=4):
     """Load actions of node_i.
     """
     matplotlib.use('Agg')
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
+    # matplotlib.rcParams['text.usetex'] = True
+    plt.rcParams["font.family"] = "Times New Roman"
+
+    font = {'size': 14,
+            'weight': "bold"}
+    matplotlib.rc('font', **font)
+
+    matplotlib.rc('xtick', labelsize=12)
+    matplotlib.rc('ytick', labelsize=12)
+
     env = Env(nodes_n=10, evil_nodes_type='2r1c', directed_graph=True)
-    fig, axs = plt.subplots(x, y, constrained_layout=True, figsize=[10, 6])
+    fig, axs = plt.subplots(x, y, constrained_layout=False, figsize=[12, 4])
     data = {}
+    handles = [None] * 10
     colors = ['#001d4a', '#33261D', '#4f345a', '#eca400', '#6e8898', '#8f2d56', '#d2a1b8', '#e4fde1', '#ab81cd', '#6b2737']
     for file_name in os.listdir(path):
         if file_name.startswith('.'):
@@ -58,11 +71,13 @@ def load_actions_of_node(path: str, x=2, y=4):
         df['sum'] = df.iloc[:, 2:].sum(axis=1)
         file_names.sort()
         for i, file_name in enumerate(file_names):
-            axs[pos_x][pos_y].plot(df['Step'], df[file_name] / df['sum'] * adjs_total_weight, color=colors[env.map.weights_index_without_self[int(node)][i]])
-        axs[pos_x][pos_y].legend(labels, loc='upper left', fontsize=8)
+            index = env.map.weights_index_without_self[int(node)][i]
+            line, = axs[pos_x][pos_y].plot(df['Step'], df[file_name] / df['sum'] * adjs_total_weight, color=colors[env.map.weights_index_without_self[int(node)][i]])
+            handles[index] = line
+        # axs[pos_x][pos_y].legend(labels, loc='lower right', fontsize=10, ncol=2 if int(node) == 3 else 1)
         axs[pos_x][pos_y].set_title('Node {0}'.format(node))
         axs[pos_x][pos_y].set_xlabel('Times / Million')
-        axs[pos_x][pos_y].set_ylabel('Actions(Weights)')
+        axs[pos_x][pos_y].set_ylabel('Actions')
         axs[pos_x][pos_y].xaxis.set_major_formatter(tick.FuncFormatter(x_fmt))
     reward_path = os.path.join(path, 'rewards')
     # df = pd.read_csv(os.path.join(reward_path, '3r.csv'))
@@ -80,12 +95,15 @@ def load_actions_of_node(path: str, x=2, y=4):
         axs[1, 3].plot(df['Step'], df['Value'].rolling(100).mean())
 
         # axs[1, 3].plot(df['Step'], df['Value'], alpha=0.5, color=colors[i])
-    axs[1, 3].legend(['Node {0}'.format(i) for i in range(3, 11)], loc='upper left', fontsize=8)
+    # axs[1, 3].legend(['Node {0}'.format(i) for i in range(3, 11)], loc='lower right', fontsize=10, ncol=2)
     axs[1, 3].set_title('Rewards')
     axs[1, 3].set_xlabel('Times / Million')
     axs[1, 3].set_ylabel('Rewards')
     axs[1, 3].xaxis.set_major_formatter(tick.FuncFormatter(x_fmt))
+    line_labels = ['Node{0}'.format(i) for i in range(10)]
     fig.suptitle('D-DDPG Training Processes')
+    fig.legend(loc='lower center', handles=handles, labels=line_labels, fontsize=10, ncol=5)
+    plt.subplots_adjust(hspace=1, wspace=0.37, left=0.07, right=0.995, top=0.80, bottom=0.25)
     plt.show()
     plt.savefig('ddpg-1r2c-train.eps', format='eps')
 

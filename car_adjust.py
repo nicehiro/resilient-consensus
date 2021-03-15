@@ -7,6 +7,7 @@ import math
 class CarEnv(Env):
     def __init__(self):
         super().__init__(nodes_n=6, evil_nodes_type='3r', times=1, reset_env=True, with_noise=False, directed_graph=False)
+        self.goods_n = 4
 
     def make_map(self):
         node_random_1 = Node(0, random.random() * self.times, Property.RANDOM)
