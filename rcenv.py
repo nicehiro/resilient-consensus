@@ -21,13 +21,22 @@ class Env(gym.Env):
     def _calc_dim(self):
         """Calc features and actions dimention."""
         for node in self.topology.nodes:
-            if node.attribute is not Attribute.NORMAL:
+            if node.attribute is Attribute.NORMAL:
+                # Normal node
+                # features: value of neighbors
+                # actions: weights of neighbors
+                n = len(node.weights)
+                self.features_n.append(n)
+                self.actions_n.append(n - 1)
+            elif node.attribute is Attribute.INTELLIGENT:
+                # Intelligent bad node
+                # features: value of all nodes in topology
+                # actions: self value
+                self.features_n.append(self.n)
+                self.actions_n.append(1)
+            else:
                 self.features_n.append(None)
                 self.actions_n.append(None)
-                continue
-            n = len(node.weights)
-            self.features_n.append(n)
-            self.actions_n.append(n - 1)
 
     def step(self, actions):
         """Execute actions for each node.
@@ -56,13 +65,17 @@ class Env(gym.Env):
     def _state(self):
         states = []
         for i, node in enumerate(self.topology.nodes):
-            if not self.features_n[i]:
-                states.append(None)
-                continue
-            state = np.zeros(shape=[self.features_n[i]])
-            state[0] = node.value
-            for j, adj_index in enumerate(node.adjacents):
-                state[j + 1] = self.topology.nodes[adj_index].value
+            if node.attribute is Attribute.NORMAL:
+                state = np.zeros(shape=[self.features_n[i]])
+                state[0] = node.value
+                for j, adj_index in enumerate(node.adjacents):
+                    state[j + 1] = self.topology.nodes[adj_index].value
+            elif node.attribute is Attribute.INTELLIGENT:
+                state = np.zeros(shape=[self.features_n[i]])
+                for j, node_j in enumerate(self.topology.nodes):
+                    state[j] = node_j.value
+            else:
+                state = None
             states.append(state)
         return states
 
@@ -77,11 +90,14 @@ class Env(gym.Env):
         """Calc rewards for all node."""
         rewards = []
         for node in self.topology.nodes:
+            r = None
             if node.attribute is Attribute.NORMAL:
                 d = node._soft_distance()
                 r = 1 * (math.exp(-20 * d) - 0.5)
-                rewards.append(r)
-            rewards.append(None)
+            elif node.attribute is Attribute.INTELLIGENT:
+                d = self.topology.hard_distance()
+                r = 1 * (math.exp(20 * d) - 0.5)
+            rewards.append(r)
         return rewards
 
 

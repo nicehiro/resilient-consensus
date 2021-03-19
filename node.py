@@ -14,7 +14,7 @@ class Node:
         self.adjacents = []
         self.reset()
 
-    def update_value(self, has_value=True):
+    def update_value(self, has_noise=True, value=None):
         """Update value of node.
 
         Raises:
@@ -93,7 +93,7 @@ class NormalNode(Node):
         super().__init__(index, times)
         self.attribute = Attribute.NORMAL
 
-    def update_value(self, has_noise=True):
+    def update_value(self, has_noise=True, value=None):
         """Update value of node.
 
         Args:
@@ -130,7 +130,7 @@ class RandomNode(Node):
         super().__init__(index, times)
         self.attribute = Attribute.RANDOM
 
-    def update_value(self, has_noise=True):
+    def update_value(self, has_noise=True, value=None):
         self.value = random.random() * self.times
 
     def update_weight(self, weights):
@@ -148,8 +148,26 @@ class ConstantNode(Node):
         super().__init__(index, times)
         self.attribute = Attribute.CONSTANT
 
-    def update_value(self, has_value=True):
+    def update_value(self, has_noise=True, value=None):
         pass
+
+    def update_weight(self, weights):
+        pass
+
+
+class IntelligentNode(Node):
+    def __init__(self, index, times) -> None:
+        """Intelligent node.
+
+        Args:
+            index (int): index
+            times (int): times
+        """
+        super().__init__(index, times)
+        self.attribute = Attribute.INTELLIGENT
+
+    def update_value(self, has_noise, value):
+        self.value = value
 
     def update_weight(self, weights):
         pass

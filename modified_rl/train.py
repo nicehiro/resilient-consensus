@@ -1,4 +1,3 @@
-from env import Property
 from rcenv import Env
 from torch.utils.tensorboard import SummaryWriter
 from modified_rl.agent import Agent
@@ -8,8 +7,7 @@ from utils import adjacent_matrix
 
 
 def train(**kwargs):
-    """Using modified to train a model make bad node's weight smaller enough.
-    """
+    """Using modified to train a model make bad node's weight smaller enough."""
     writer = SummaryWriter(log_dir=kwargs["log_path"])
     node_attrs = [
         Attribute.CONSTANT,
@@ -102,7 +100,7 @@ def train(**kwargs):
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     train(
         log_path="logs/modified_rl/",
         memory_size=1000,

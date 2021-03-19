@@ -1,7 +1,7 @@
 from typing import List
 
 from attribute import Attribute
-from node import ConstantNode, NormalNode, RandomNode
+from node import ConstantNode, IntelligentNode, Node, NormalNode, RandomNode
 
 
 class Topology:
@@ -15,7 +15,7 @@ class Topology:
             node_attrs (Dict): node attribute.
             times: default times is 1, means node value between 0 to 1.
         """
-        self.nodes = []
+        self.nodes = list()
         self.times = times
         self._generate_topo(adjacency_matrix, node_attrs)
         self.n = len(self.nodes)
@@ -38,6 +38,8 @@ class Topology:
                 node = RandomNode(i, times=self.times)
             elif attr is Attribute.CONSTANT:
                 node = ConstantNode(i, times=self.times)
+            elif attr is Attribute.INTELLIGENT:
+                node = IntelligentNode(i, times=self.times)
             self.nodes.append(node)
         for i, adjs in enumerate(adj_maxtrix):
             node = self.nodes[i]
@@ -65,6 +67,24 @@ class Topology:
     def update_value(self):
         for node in self.nodes:
             node.update_value()
+
+    def hard_distance(self):
+        """Calc real distance between each node's value.
+
+        Returns:
+            float: distance
+        """
+        dis = 0
+        times = 0
+        for i in range(self.n):
+            for j in range(i, self.n):
+                if (
+                    self.nodes[i].attribute == Attribute.NORMAL
+                    and self.nodes[j].attribute == Attribute.NORMAL
+                ):
+                    dis += abs(self.nodes[i].value - self.nodes[j].value)
+                    times += 1
+        return dis / times
 
     def node_val(self):
         res = {}

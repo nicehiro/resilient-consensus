@@ -12,3 +12,4 @@ class Attribute(Enum):
     NORMAL = 1
     RANDOM = 2
     CONSTANT = 3
+    INTELLIGENT = 4
