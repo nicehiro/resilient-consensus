@@ -10,12 +10,13 @@ def train(**kwargs):
     """Using modified to train a model make bad node's weight smaller enough."""
     writer = SummaryWriter(log_dir=kwargs["log_path"])
     node_attrs = [
-        Attribute.CONSTANT,
-        Attribute.CONSTANT,
+        Attribute.RANDOM,
+        Attribute.RANDOM,
         Attribute.CONSTANT,
         Attribute.CONSTANT,
     ] + [Attribute.NORMAL for _ in range(8)]
-    env = Env(adjacent_matrix, node_attrs)
+    probs = [0.5] * 4 + [1.0] * 8
+    env = Env(adjacent_matrix, node_attrs, probs=probs)
 
     bads_n = 4
     goods_n = 8

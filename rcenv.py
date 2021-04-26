@@ -9,13 +9,16 @@ from topology import Topology
 
 
 class Env(gym.Env):
-    def __init__(self, adj_matrix, node_attrs, times=1, has_noise=True) -> None:
+    def __init__(
+        self, adj_matrix, node_attrs, probs, seeds, times=1, noise_scale=0.01
+    ) -> None:
         super().__init__()
-        self.topology = Topology(adj_matrix, node_attrs, times)
+        self.topology = Topology(
+            adj_matrix, node_attrs, probs, seeds, times, noise_scale
+        )
         self.n = self.topology.n
         self.features_n = []
         self.actions_n = []
-        self.has_noise = has_noise
         self._calc_dim()
 
     def _calc_dim(self):

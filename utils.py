@@ -17,14 +17,14 @@ else:
 device = torch.device(dev)
 
 adjacent_matrix = [
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+    [0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
     [1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0],
     [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
     [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
-    [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
     [0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0],
     [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
@@ -33,20 +33,18 @@ adjacent_matrix = [
 
 
 linestyle_tuple = [
-    ('loosely dotted',        (0, (1, 10))),
-    ('dotted',                (0, (1, 1))),
-
+    ("loosely dotted", (0, (1, 10))),
+    ("dotted", (0, (1, 1))),
     # ('loosely dashed',        (0, (5, 10))),
-    ('dashed',                (0, (5, 5))),
+    ("dashed", (0, (5, 5))),
     # ('densely dashed',        (0, (5, 1))),
-
-    ('loosely dashdotted',    (0, (3, 10, 1, 10))),
-    ('dashdotted',            (0, (3, 5, 1, 5))),
-    ('densely dashdotted',    (0, (3, 1, 1, 1))),
-
-    ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
+    ("loosely dashdotted", (0, (3, 10, 1, 10))),
+    ("dashdotted", (0, (3, 5, 1, 5))),
+    ("densely dashdotted", (0, (3, 1, 1, 1))),
+    ("dashdotdotted", (0, (3, 5, 1, 5, 1, 5))),
     # ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
-    ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
+    ("densely dashdotdotted", (0, (3, 1, 1, 1, 1, 1))),
+]
 
 
 def summary_writer(log_path="log"):
@@ -131,8 +129,7 @@ def tflog2pandas(path: str) -> pd.DataFrame:
 
 
 def many_logs2pandas(event_paths):
-    """Convert all event to pandas dataframe.
-    """
+    """Convert all event to pandas dataframe."""
     all_logs = pd.DataFrame()
     for path in event_paths:
         log = tflog2pandas(path)
@@ -162,7 +159,7 @@ def logs2df(logdir_or_logfile: str, write_pkl: bool, write_csv: bool, out_dir: s
     pp = pprint.PrettyPrinter(indent=4)
     if os.path.isdir(logdir_or_logfile):
         # Get all event* runs from logging_dir subdirectories
-        event_paths = glob.glob(logdir_or_logfile + '/**/event*')
+        event_paths = glob.glob(logdir_or_logfile + "/**/event*")
     elif os.path.isfile(logdir_or_logfile):
         event_paths = [logdir_or_logfile]
     else:
@@ -178,12 +175,12 @@ def logs2df(logdir_or_logfile: str, write_pkl: bool, write_csv: bool, out_dir: s
         loss_dfs = {}
         weight_dfs = {}
         for path in event_paths[:]:
-            name = path.split('/')[-2]
-            if name.split(' ')[0] == 'Loss':
+            name = path.split("/")[-2]
+            if name.split(" ")[0] == "Loss":
                 continue
             # Actions of Node 3_Adj 8
-            node_i = name.split(' ')[3].split('_')[0]
-            adj_i = name.split(' ')[-1]
+            node_i = name.split(" ")[3].split("_")[0]
+            adj_i = name.split(" ")[-1]
             if node_i not in weight_dfs:
                 weight_dfs[node_i] = {}
             weight_dfs[node_i][adj_i] = tflog2pandas(path)

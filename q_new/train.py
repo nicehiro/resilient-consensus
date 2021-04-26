@@ -4,62 +4,97 @@ import pandas as pd
 import numpy as np
 from utils import adjacent_matrix
 from attribute import Attribute
+from functools import reduce
 
 
 def make_q(env: Env, init_value):
     q = [{} for _ in range(env.n)]
     for i, node in enumerate(env.topology.nodes):
         for adj, _ in node.weights.items():
-            if adj.index == i:
-                continue
             q[i][adj.index] = init_value
     return q
 
 
 def q_consensus(**kwargs):
     # print(kwargs)
-    node_attrs = [
-        Attribute.CONSTANT,
-        Attribute.CONSTANT,
-        Attribute.RANDOM,
-        Attribute.RANDOM,
-    ] + [Attribute.NORMAL] * 8
-    env = Env(adjacent_matrix, node_attrs)
+    bads_attrs = {
+        "rrrr": [Attribute.RANDOM] * 4,
+        "rrcc": [Attribute.RANDOM] * 2 + [Attribute.CONSTANT] * 2,
+        "ccrr": [Attribute.CONSTANT] * 2 + [Attribute.RANDOM] * 2,
+        "cccc": [Attribute.CONSTANT] * 4,
+    }
+    node_attrs = bads_attrs[kwargs["bads_attrs"]] + [Attribute.NORMAL] * 8
+    env = Env(
+        adjacent_matrix,
+        node_attrs=node_attrs,
+        probs=kwargs["probs"],
+        seeds=kwargs["seeds"],
+        times=1,
+        noise_scale=kwargs["noise_scale"],
+    )
+    is_consensus = False
     Q = make_q(env, 1)
-    step_size = 0.01
-    if kwargs["save_csv"]:
-        df = pd.DataFrame(columns=["Node{0}".format(i) for i in range(env.n)])
-    episodes_n = 2000
+    step_size = 0.1
+    df = pd.DataFrame(columns=["Node{0}".format(i) for i in range(env.n)])
+    success = []
+    episodes_n = kwargs["episodes_n"]
     for epi in range(episodes_n):
-        if kwargs["save_csv"]:
-            df = df.append(env.topology.node_val(), ignore_index=True)
+        if epi > 0.8 * episodes_n:
+            step_size -= 0.1 / (episodes_n * 0.2)
+        df = df.append(env.topology.node_val(), ignore_index=True)
         for i, node in enumerate(env.topology.nodes):
+            if i < 4:
+                continue
+            rewards = {}
             for j, q in Q[i].items():
-                # 0.01 3r: 0.0002     1r2c: 0.0001      2r1c: 0.0001      3c: 0.0001
-                # times=1, directed graph: 1 + 0.1 * epi, range(2000)
-                # times=1, undirected graph: 10 + 0.1 * epi, range(1000)
-                r_ij = math.exp(
-                    -abs(env.topology.nodes[j].value - node.value) * (1 + 0.1 * epi)
-                )
-                if epi > 0.8 * episodes_n:
-                    step_size -= 0.01 / (episodes_n * 0.2)
+                node_j = env.topology.nodes[j]
+                r_ij = math.exp(-1 * abs(node_j.value - node.value))
+                r_ij = node.weights[node_j] * r_ij
+                rewards[j] = r_ij
+
+            sum_r = sum(rewards.values())
+            for j, q in Q[i].items():
+                r_ij = rewards[j] / sum_r
                 Q[i][j] += max(step_size, 0) * (r_ij - Q[i][j])
             q_sum = sum(Q[i].values())
             for j in Q[i].keys():
-                w = (Q[i][j] / q_sum) * (1 - 1 / len(node.weights))
+                w = Q[i][j] / q_sum
                 node.update_weight_by_adj(env.topology.nodes[j], w)
+        # check success
+        t = df.iloc[-1:, 5:]
+        if (t.max(axis=1) - t.min(axis=1)).iloc[-1] < kwargs["baseline"]:
+            success.append(True)
+        else:
+            success.append(False)
+        if kwargs["check_success"] and epi > 20:
+            # calc expectation of distance in last 10 steps
+            last_steps = 20
+            is_consensus = reduce(lambda x, y: x and y, success[-last_steps:])
+            if is_consensus:
+                break
         env.topology.update_value()
-    print(env.topology)
+
     prefix = ""
-    for attr in node_attrs[0:4]:
+    for attr in bads_attrs[kwargs["bads_attrs"]][0:4]:
         if attr is Attribute.RANDOM:
             prefix += "r"
         if attr is Attribute.CONSTANT:
             prefix += "c"
     if kwargs["save_csv"]:
-        df.to_csv("q_c_{0}.csv".format(prefix))
-    return env
+        df.to_csv("q_c_{0}_{1}.csv".format(prefix, int(kwargs["probs"][0] * 10)))
+    # print(env.topology)
+    return epi, is_consensus
 
 
 if __name__ == "__main__":
-    q_consensus()
+    probs = [0.5] * 4 + [1.0] * 8
+    q_consensus(
+        probs=probs,
+        noise_scale=0.01,
+        seeds=[i for i in range(12)],
+        save_csv=True,
+        episodes_n=5000,
+        bads_attrs="rrcc",
+        check_success=True,
+        baseline=0.001,
+    )

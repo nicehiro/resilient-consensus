@@ -7,20 +7,32 @@ from node import ConstantNode, IntelligentNode, Node, NormalNode, RandomNode
 class Topology:
     """Describe relationships between nodes and edges."""
 
-    def __init__(self, adjacency_matrix: List[List], node_attrs: List, times=1) -> None:
+    def __init__(
+        self,
+        adjacency_matrix: List[List],
+        node_attrs: List,
+        probs: List,
+        seeds: List,
+        times=1,
+        noise_scale=0,
+    ) -> None:
         """Topology initialization.
 
         Args:
             adjacency_matrix (List[List]): adjacency matrix of topology.
             node_attrs (Dict): node attribute.
             times: default times is 1, means node value between 0 to 1.
+            seeds: list of n random seeds
         """
         self.nodes = list()
         self.times = times
-        self._generate_topo(adjacency_matrix, node_attrs)
-        self.n = len(self.nodes)
+        self.n = len(adjacency_matrix)
+        # self.seeds = [i for i in range(self.n)]
+        self.seeds = seeds
+        self.noise_scale = noise_scale
+        self._generate_topo(adjacency_matrix, node_attrs, probs)
 
-    def _generate_topo(self, adj_maxtrix: List[List], node_attrs: List):
+    def _generate_topo(self, adj_maxtrix: List[List], node_attrs: List, probs: List):
         """Generate topology.
 
         Args:
@@ -33,13 +45,35 @@ class Topology:
             )
         for i, attr in enumerate(node_attrs):
             if attr is Attribute.NORMAL:
-                node = NormalNode(i, times=self.times)
+                node = NormalNode(
+                    i,
+                    times=self.times,
+                    seed=self.seeds[i],
+                    noise_scale=self.noise_scale,
+                )
             elif attr is Attribute.RANDOM:
-                node = RandomNode(i, times=self.times)
+                node = RandomNode(
+                    i,
+                    times=self.times,
+                    probs=probs[i],
+                    seed=self.seeds[i],
+                    noise_scale=self.noise_scale,
+                )
             elif attr is Attribute.CONSTANT:
-                node = ConstantNode(i, times=self.times)
+                node = ConstantNode(
+                    i,
+                    times=self.times,
+                    probs=probs[i],
+                    seed=self.seeds[i],
+                    noise_scale=self.noise_scale,
+                )
             elif attr is Attribute.INTELLIGENT:
-                node = IntelligentNode(i, times=self.times)
+                node = IntelligentNode(
+                    i,
+                    times=self.times,
+                    seed=self.seeds[i],
+                    noise_scale=self.noise_scale,
+                )
             self.nodes.append(node)
         for i, adjs in enumerate(adj_maxtrix):
             node = self.nodes[i]

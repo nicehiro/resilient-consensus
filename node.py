@@ -1,20 +1,21 @@
 import random
 from typing import Dict
-
 from attribute import Attribute
 
 
 class Node:
-    def __init__(self, index, times) -> None:
+    def __init__(self, index, times, probs=1, seed=1, noise_scale=0.01) -> None:
         self.index = index
         self.value = None
         self.weights = None
         self.attribute = None
         self.times = times
+        self.seed = seed
+        self.noise_scale = noise_scale
         self.adjacents = []
         self.reset()
 
-    def update_value(self, has_noise=True, value=None):
+    def update_value(self, value=None):
         """Update value of node.
 
         Raises:
@@ -69,6 +70,7 @@ class Node:
         self.weights = weights
 
     def reset(self):
+        random.seed(self.seed)
         # reset value to random value
         self.value = random.random() * self.times
         # reset weights to mean weight
@@ -87,13 +89,7 @@ class Node:
         str += "-----------------------------------------------"
         return str
 
-
-class NormalNode(Node):
-    def __init__(self, index, times) -> None:
-        super().__init__(index, times)
-        self.attribute = Attribute.NORMAL
-
-    def update_value(self, has_noise=True, value=None):
+    def update_value_normaly(self, value=None):
         """Update value of node.
 
         Args:
@@ -101,11 +97,25 @@ class NormalNode(Node):
         """
         m = 0
         for adj, w in self.weights.items():
-            noise = (
-                0 if not has_noise else (random.random() - 0.5) * 2 / 100 * self.times
-            )
+            noise = self.noise_scale * (random.random() * 2 - 1) * self.times
+            # noise = 0 if not has_noise else (random.random() * 2 - 1) / 100 * self.times
+            w = 0 if w < 0.05 else w
             m += w * (adj.value - self.value) + noise
         self.value += m
+
+
+class NormalNode(Node):
+    def __init__(self, index, times, probs=1, seed=0, noise_scale=0.01) -> None:
+        super().__init__(index, times, probs, seed, noise_scale)
+        self.attribute = Attribute.NORMAL
+
+    def update_value(self, value=None):
+        """Update value of node.
+
+        Args:
+            has_noise (bool, optional): if or not has noise. Defaults to True.
+        """
+        self.update_value_normaly(value)
 
     def update_weight(self, weights):
         for i, adj in enumerate(self.weights.keys()):
@@ -118,55 +128,62 @@ class NormalNode(Node):
     def normalize(self, w_sum):
         if not self.weights:
             raise Exception("You should init weights first.")
-        rest_total = 1 - (1 / len(self.weights))
         for adj, w in self.weights.items():
-            if adj.index == self.index:
-                continue
-            self.weights[adj] = w / w_sum * rest_total
+            self.weights[adj] = w / w_sum
 
 
 class RandomNode(Node):
-    def __init__(self, index, times) -> None:
-        super().__init__(index, times)
+    def __init__(self, index, times, probs=1, seed=1, noise_scale=0.01) -> None:
+        super().__init__(index, times, probs, seed, noise_scale)
         self.attribute = Attribute.RANDOM
+        self.probs = probs
 
-    def update_value(self, has_noise=True, value=None):
-        self.value = random.random() * self.times
+    def update_value(self, value=None):
+        if random.random() <= self.probs:
+            self.value = random.random() * self.times
+        else:
+            self.update_value_normaly(value)
 
     def update_weight(self, weights):
         pass
 
 
 class ConstantNode(Node):
-    def __init__(self, index, times) -> None:
+    def __init__(self, index, times, probs=1, seed=2, noise_scale=0.01) -> None:
         """Constant node.
 
         Args:
             v (float): value
             times (int): times of A
         """
-        super().__init__(index, times)
+        super().__init__(index, times, probs, seed, noise_scale)
         self.attribute = Attribute.CONSTANT
+        self.probs = probs
+        random.seed(self.seed)
+        self.constant_value = random.random() * self.times
 
-    def update_value(self, has_noise=True, value=None):
-        pass
+    def update_value(self, value=None):
+        if random.random() < self.probs:
+            self.value = self.constant_value
+        else:
+            self.update_value_normaly(value)
 
     def update_weight(self, weights):
         pass
 
 
 class IntelligentNode(Node):
-    def __init__(self, index, times) -> None:
+    def __init__(self, index, times, probs=1, seed=3, noise_scale=0.01) -> None:
         """Intelligent node.
 
         Args:
             index (int): index
             times (int): times
         """
-        super().__init__(index, times)
+        super().__init__(index, times, probs, seed, noise_scale)
         self.attribute = Attribute.INTELLIGENT
 
-    def update_value(self, has_noise, value):
+    def update_value(self, value):
         self.value = value
 
     def update_weight(self, weights):

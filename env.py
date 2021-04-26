@@ -104,6 +104,8 @@ class Map:
             s = sum_ - self.matrix[node_i][node_i]
             self.cleanup(node_i, choosen)
             l = len(choosen)
+        if l == 0:
+            return
         base_w = 1 / l
         others_w = 1 - base_w
         for i in range(self.nodes_n):

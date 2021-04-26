@@ -13,7 +13,7 @@ class LargeNet:
         self.nodes_n = 1000
         self.bads_n = 100
         self.goods_n = 900
-        self.connected_prob = 0.001
+        self.connected_prob = 0.02
         self.map = None
         self.make_map()
 
@@ -22,24 +22,47 @@ class LargeNet:
         good_nodes = [
             Node(i, random(), Property.GOOD) for i in range(self.bads_n, self.nodes_n)
         ]
-        nodes = bad_nodes + good_nodes
+        self.nodes = bad_nodes + good_nodes
         for i, node in enumerate(bad_nodes):
             node.weights = {i: 1.0}
+        # for i in range(1, 10):
+        #     nodes[i * 100].weights = {i * 100 + 1: 1.0}
+        #     for j in range(i * 100, i * 100 + 99):
+        #         nodes[j].weights[j + 1] = 1.0
+        #         nodes[j + 1].weights = {j: 1.0}
+        #     a, b = random(), random()
+        #     if i < 9:
+        #         nodes[math.floor(a * 100 + i * 100)].weights[
+        #             math.floor(b * 100 + (i + 1) * 100)
+        #         ] = 1.0
+        # for i in range(100):
+        #     for j in range(100, 1000):
+        #         if random() < self.connected_prob:
+        #             nodes[j].weights[i] = 1.0
+        self.regenerate_map()
+
+    def regenerate_map(self):
+        # set rooted map
         for i in range(1, 10):
-            nodes[i * 100].weights = {i * 100 + 1: 1.0}
+            self.nodes[i * 100].weights = {i * 100 + 1: 1.0}
             for j in range(i * 100, i * 100 + 99):
-                nodes[j].weights[j + 1] = 1.0
-                nodes[j + 1].weights = {j: 1.0}
+                self.nodes[j].weights[j + 1] = 1.0
+                self.nodes[j + 1].weights = {j: 1.0}
             a, b = random(), random()
             if i < 9:
-                nodes[math.floor(a * 100 + i * 100)].weights[
+                self.nodes[math.floor(a * 100 + i * 100)].weights[
                     math.floor(b * 100 + (i + 1) * 100)
                 ] = 1.0
-        for i in range(100):
-            for j in range(100, 1000):
+        # switching topo
+        for i in range(100, 1000):
+            for j in range(1000):
                 if random() < self.connected_prob:
-                    nodes[j].weights[i] = 1.0
-        self.map = Map(nodes)
+                    self.nodes[i].weights[j] = 1.0
+                else:
+                    if j in self.nodes[i].weights:
+                        self.nodes[i].weights.pop(j)
+            self.nodes[i].weights[i] = 1.0
+        self.map = Map(self.nodes)
 
     # def make_map(self):
     #     bad_nodes = [Node(i, random(), Property.CREEPY)
@@ -138,6 +161,7 @@ def q_consensus(**kwargs):
     episodes_n = 1000
     observe_nodes = [int(random() * 1000) for _ in range(10)]
     for epi in range(episodes_n):
+        # env.regenerate_map()
         if kwargs["save_csv"]:
             df = df.append(env.map.node_val(), ignore_index=True)
         writer.add_scalars(
@@ -181,6 +205,6 @@ if __name__ == "__main__":
         save_csv=False,
         directed_graph=False,
         with_noise=True,
-        log_path="logs/large_net",
+        log_path="logs/test",
     )
     # generate_connected_net()
