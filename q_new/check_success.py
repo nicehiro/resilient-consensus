@@ -3,7 +3,7 @@ import random
 import pandas as pd
 
 
-def check_success(noise_scale, baseline, bads_attrs, epochs, probs, save_csv):
+def check_success_(noise_scale, baseline, bads_attrs, epochs, probs, save_csv):
     """Check if current topology get consensus.
 
     Args:
@@ -20,7 +20,7 @@ def check_success(noise_scale, baseline, bads_attrs, epochs, probs, save_csv):
             noise_scale=noise_scale,
             seeds=seeds,
             save_csv=save_csv,
-            episodes_n=5000,
+            episodes_n=3000,
             bads_attrs=bads_attrs,
             check_success=True,
             baseline=baseline,
@@ -31,7 +31,7 @@ def check_success(noise_scale, baseline, bads_attrs, epochs, probs, save_csv):
     return 0 if success == 0 else epi_sum / success, success
 
 
-if __name__ == "__main__":
+def check_success():
     bad_attrs = ["rrrr", "rrcc", "cccc"]
     # bad_attrs = ["cccc"]
     indexs = ["0.{0}".format(i) for i in range(10, 0, -1)]
@@ -45,9 +45,9 @@ if __name__ == "__main__":
             print(
                 "Bad Attrs: {0}\t Probability to be bad: {1}".format(bad_attr, probs[0])
             )
-            mean_epi, success = check_success(
-                noise_scale=0,
-                baseline=0.001,
+            mean_epi, success = check_success_(
+                noise_scale=0.01,
+                baseline=0.03,
                 bads_attrs=bad_attr,
                 epochs=epochs,
                 probs=probs,
@@ -57,3 +57,56 @@ if __name__ == "__main__":
             success_df.loc["0.{0}".format(i)][bad_attr] = success / epochs
     mean_epi_df.to_csv("mean_epi_fixed.csv")
     success_df.to_csv("success_fixed.csv")
+
+
+def check_success_noise_scale():
+    bad_attrs = ["rrcc"]
+    noise_scales = [0.001, 0.005, 0.01, 0.015, 0.02, 0.022, 0.024, 0.026, 0.028, 0.03, 0.035]
+    indexs = [str(i) for i in noise_scales]
+    epochs = 500
+    mean_epi_df = pd.DataFrame(columns=bad_attrs, index=indexs)
+    success_df = pd.DataFrame(columns=bad_attrs, index=indexs)
+    for bad_attr in bad_attrs:
+        probs = [1.0] * 4 + [1.0] * 8
+        for noise_scale in noise_scales:
+            mean_epi, success = check_success_(
+                noise_scale=noise_scale,
+                baseline=0.05,
+                bads_attrs=bad_attr,
+                epochs=epochs,
+                probs=probs,
+                save_csv=False,
+            )
+            mean_epi_df.loc[str(noise_scale)][bad_attr] = mean_epi
+            success_df.loc[str(noise_scale)][bad_attr] = success / epochs
+    mean_epi_df.to_csv("mean_epi_noise_scale.csv")
+    success_df.to_csv("success_noise_scale.csv")
+
+
+def check_success_baseline():
+    bad_attrs = ["rrcc"]
+    baselines = [0.01, 0.015, 0.016, 0.017, 0.018, 0.019, 0.02, 0.03, 0.04, 0.05]
+    indexs = [str(i) for i in baselines]
+    epochs = 500
+    mean_epi_df = pd.DataFrame(columns=bad_attrs, index=indexs)
+    success_df = pd.DataFrame(columns=bad_attrs, index=indexs)
+    for bad_attr in bad_attrs:
+        probs = [1.0] * 4 + [1.0] * 8
+        for baseline in baselines:
+            mean_epi, success = check_success_(
+                noise_scale=0.01,
+                baseline=baseline,
+                bads_attrs=bad_attr,
+                epochs=epochs,
+                probs=probs,
+                save_csv=False,
+            )
+            mean_epi_df.loc[str(baseline)][bad_attr] = mean_epi
+            success_df.loc[str(baseline)][bad_attr] = success / epochs
+    mean_epi_df.to_csv("mean_epi_baseline.csv")
+    success_df.to_csv("success_baseline.csv")
+
+
+if __name__ == "__main__":
+    check_success_noise_scale()
+    # check_success_baseline()

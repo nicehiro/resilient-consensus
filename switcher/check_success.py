@@ -46,9 +46,9 @@ if __name__ == "__main__":
             cp = i * 0.1
             print("Bad Attrs: {0}\t Connection Probability: {1}".format(bad_attr, cp))
             mean_epi, success = check_success(
-                noise_scale=0,
+                noise_scale=0.01,
                 connection_probs=cp,
-                baseline=0.001,
+                baseline=0.04,
                 bads_attrs=bad_attr,
                 epochs=epochs,
                 save_csv=False,

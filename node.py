@@ -70,7 +70,7 @@ class Node:
         self.weights = weights
 
     def reset(self):
-        random.seed(self.seed)
+        # random.seed(self.seed)
         # reset value to random value
         self.value = random.random() * self.times
         # reset weights to mean weight
@@ -78,6 +78,21 @@ class Node:
             mean_w = 1 / len(self.weights)
             for adj, _ in self.weights.items():
                 self.weights[adj] = mean_w
+        # reset weights to random value
+        # if self.weights:
+        #     ws = []
+        #     for adj, _ in self.weights.items():
+        #         if adj.index == self.index:
+        #             ws.append(1 / len(self.weights))
+        #         else:
+        #             ws.append(random.random())
+        #     s_s = sum(ws) - (1 / len(self.weights))
+        #     i = 0
+        #     for adj, _ in self.weights.items():
+        #         if adj.index == self.index:
+        #             continue
+        #         self.weights[adj] = ws[i] / s_s
+        #         i += 1
 
     def normalize(self, w_sum):
         pass
@@ -97,11 +112,13 @@ class Node:
         """
         m = 0
         for adj, w in self.weights.items():
-            noise = self.noise_scale * (random.random() * 2 - 1) * self.times
+            # noise = self.noise_scale * (random.random() * 2 - 1) * self.times
             # noise = 0 if not has_noise else (random.random() * 2 - 1) / 100 * self.times
-            w = 0 if w < 0.05 else w
-            m += w * (adj.value - self.value) + noise
-        self.value += m
+            # w = 0 if w < 0.01 else w
+            # w = 0 if w < 0.1 else w
+            m += w * (adj.value - self.value)
+        noise = self.noise_scale * (random.random() * 2 - 1) * self.times
+        self.value = self.value + m + noise
 
 
 class NormalNode(Node):
@@ -118,18 +135,40 @@ class NormalNode(Node):
         self.update_value_normaly(value)
 
     def update_weight(self, weights):
+        """Update weights without self.
+
+        Args:
+            weights (dict): weights
+        """
         for i, adj in enumerate(self.weights.keys()):
             if adj.index == self.index:
                 continue
             self.weights[adj] = weights[self.adjacents.index(adj.index)]
         # normalize weights
-        self.normalize(sum(weights))
+        w_sum = sum(weights) / (1 - (1 / (len(weights) + 1)))
+        self.normalize(w_sum)
 
     def normalize(self, w_sum):
         if not self.weights:
             raise Exception("You should init weights first.")
         for adj, w in self.weights.items():
+            if adj.index == self.index:
+                continue
             self.weights[adj] = w / w_sum
+
+    # def update_weight(self, weights):
+    #     for i, adj in enumerate(self.weights.keys()):
+    #         if adj.index == self.index:
+    #             continue
+    #         self.weights[adj] = weights[self.adjacents.index(adj.index)]
+    #     # normalize weights
+    #     self.normalize(sum(weights))
+
+    # def normalize(self, w_sum):
+    #     if not self.weights:
+    #         raise Exception("You should init weights first.")
+    #     for adj, w in self.weights.items():
+    #         self.weights[adj] = w / w_sum
 
 
 class RandomNode(Node):
@@ -159,8 +198,12 @@ class ConstantNode(Node):
         super().__init__(index, times, probs, seed, noise_scale)
         self.attribute = Attribute.CONSTANT
         self.probs = probs
-        random.seed(self.seed)
-        self.constant_value = random.random() * self.times
+        # random.seed(self.seed)
+        # self.constant_value = random.random() * self.times
+    
+    def reset(self):
+        super().reset()
+        self.constant_value = self.value
 
     def update_value(self, value=None):
         if random.random() < self.probs:

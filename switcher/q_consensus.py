@@ -100,14 +100,17 @@ def q_consensus(**kwargs):
             rewards = {}
             for j, q in Q[i].items():
                 if j in choosen:
-                    r[i][j] = math.exp(-1 * abs(j.value - node.value))
+                    noise = kwargs['noise_scale'] * (random.random() * 2 - 1)
+                    r[i][j] = math.exp(-1 * abs(j.value - node.value + noise))
                     r[i][j] = node.weights[j] * r[i][j]
                     rewards[j] = r[i][j]
             sum_r = sum(rewards.values())
             for j, q in Q[i].items():
                 if j in choosen:
-                    # if j.index == i:
-                    #     continue
+                    if j.index == i:
+                        cc = random.random()
+                        if cc > kwargs['connect_probs']:
+                            continue
                     r_ij = rewards[j] / sum_r
                     Q[i][j] += max(step_size, 0) * (r_ij - Q[i][j])
 
@@ -155,12 +158,12 @@ def q_consensus(**kwargs):
 if __name__ == "__main__":
     # cp=0.9, baseline=0.02, epi=180
     q_consensus(
-        noise_scale=0,
+        noise_scale=0.01,
         seeds=[i for i in range(12)],
         save_csv=True,
-        episodes_n=5000,
-        bads_attrs="cccc",
+        episodes_n=3000,
+        bads_attrs="rrrr",
         connect_probs=0.1,
         check_success=True,
-        baseline=0.001,
+        baseline=0.04,
     )

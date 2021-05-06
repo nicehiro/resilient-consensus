@@ -4,19 +4,27 @@ from modified_rl.agent import Agent
 import numpy as np
 from attribute import Attribute
 from utils import adjacent_matrix
+import random
 
 
 def train(**kwargs):
     """Using modified to train a model make bad node's weight smaller enough."""
     writer = SummaryWriter(log_dir=kwargs["log_path"])
-    node_attrs = [
-        Attribute.RANDOM,
-        Attribute.RANDOM,
-        Attribute.CONSTANT,
-        Attribute.CONSTANT,
-    ] + [Attribute.NORMAL for _ in range(8)]
-    probs = [0.5] * 4 + [1.0] * 8
-    env = Env(adjacent_matrix, node_attrs, probs=probs)
+    bad_node_attrs = {
+        "rrrr": [Attribute.RANDOM] * 4,
+        "rrcc": [Attribute.RANDOM] * 2 + [Attribute.CONSTANT] * 2,
+        "cccc": [Attribute.CONSTANT] * 4,
+    }
+    node_attrs = bad_node_attrs[kwargs["bad_attrs"]] + [Attribute.NORMAL] * 8
+    probs = kwargs["probs"]
+    seeds = [random.random() * 100 for _ in range(12)]
+    env = Env(
+        adjacent_matrix,
+        node_attrs,
+        probs=probs,
+        seeds=seeds,
+        noise_scale=kwargs["noise_scale"],
+    )
 
     bads_n = 4
     goods_n = 8
@@ -45,11 +53,15 @@ def train(**kwargs):
     for epoch in range(epochs_n):
         # sample init value of x
         o = env.reset()
-        acts = [None for _ in range(bads_n)] + [
-            np.full(
-                (1, len(env.topology.nodes[i + bads_n].adjacents)),
-                1 / len(env.topology.nodes[i + bads_n].adjacents),
-            ).squeeze()
+        # acts = [None for _ in range(bads_n)] + [
+        #     np.full(
+        #         (1, len(env.topology.nodes[i + bads_n].adjacents)),
+        #         1 / len(env.topology.nodes[i + bads_n].adjacents),
+        #     ).squeeze()
+        #     for i in range(goods_n)
+        # ]
+        acts = [None] * bads_n + [
+            np.random.dirichlet(np.ones(len(env.topology.nodes[i + bads_n].adjacents)))
             for i in range(goods_n)
         ]
         for episode in range(episodes_n):
@@ -78,14 +90,6 @@ def train(**kwargs):
                         },
                         epoch * episodes_n + episode,
                     )
-            # for i, _act in enumerate(acts):
-            #     if _act is None:
-            #         continue
-            #     writer.add_scalars(
-            #         "Actions of Nodes {0}".format(i),
-            #         {"Adj {0}".format(j): a.item() for adj, w in env.nodes},
-            #         epoch * episodes_n + episode,
-            #     )
         # update policy
         if epoch % update_every == 0:
             loss = []
@@ -99,16 +103,23 @@ def train(**kwargs):
                 {"Node {0}".format(i): l for i, l in enumerate(loss)},
                 epoch,
             )
+        if epoch % 10 == 0:
+            for agent in normals:
+                agent.save()
 
 
 if __name__ == "__main__":
+    probs = [0.5] * 4 + [1.0] * 8
     train(
+        bad_attrs="cccc",
+        probs=probs,
+        noise_scale=0.05,
         log_path="logs/modified_rl/",
         memory_size=1000,
         actor_lr=1e-3,
         restore_path="trained/",
         batch_size=640,
-        epochs_n=2000,
+        epochs_n=4000,
         episodes_n=50,
         update_after=10,
         update_every=10,

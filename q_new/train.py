@@ -5,6 +5,7 @@ import numpy as np
 from utils import adjacent_matrix
 from attribute import Attribute
 from functools import reduce
+import random
 
 
 def make_q(env: Env, init_value):
@@ -48,7 +49,8 @@ def q_consensus(**kwargs):
             rewards = {}
             for j, q in Q[i].items():
                 node_j = env.topology.nodes[j]
-                r_ij = math.exp(-1 * abs(node_j.value - node.value))
+                noise = kwargs['noise_scale'] * (random.random() * 2 - 1)
+                r_ij = math.exp(-1 * abs(node_j.value - node.value + noise))
                 r_ij = node.weights[node_j] * r_ij
                 rewards[j] = r_ij
 
@@ -82,7 +84,7 @@ def q_consensus(**kwargs):
             prefix += "c"
     if kwargs["save_csv"]:
         df.to_csv("q_c_{0}_{1}.csv".format(prefix, int(kwargs["probs"][0] * 10)))
-    # print(env.topology)
+    print(env.topology)
     return epi, is_consensus
 
 
@@ -90,11 +92,11 @@ if __name__ == "__main__":
     probs = [0.5] * 4 + [1.0] * 8
     q_consensus(
         probs=probs,
-        noise_scale=0.01,
+        noise_scale=0.05,
         seeds=[i for i in range(12)],
         save_csv=True,
-        episodes_n=5000,
-        bads_attrs="rrcc",
+        episodes_n=3000,
+        bads_attrs="cccc",
         check_success=True,
-        baseline=0.001,
+        baseline=0.1,
     )
