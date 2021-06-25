@@ -24,7 +24,7 @@ class Agent:
         batch_size=64,
         restore_path="./models/intelligent/",
         hidden_layer=3,
-        hidden_size=256,
+        hidden_size=64,
     ):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]

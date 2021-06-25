@@ -34,7 +34,7 @@ def test(**kwargs):
             lr=kwargs["actor_lr"],
             gamma=0.95,
             node_i=i + bads_n,
-            restore_path=kwargs["restore_path"] + kwargs["bad_attrs"] + "/",
+            restore_path=kwargs["restore_path"],
             batch_size=kwargs["batch_size"],
             value=env.topology.nodes[i + bads_n].value,
             node_index_of_weights=0,
@@ -85,15 +85,15 @@ def test(**kwargs):
 
 
 if __name__ == "__main__":
-    probs = [0.5] * 4 + [1.0] * 8
+    probs = [0.1] * 4 + [1.0] * 8
     test(
-        noise_scale=0.05,
+        noise_scale=0.01,
         probs=probs,
-        bad_attrs="cccc",
+        bad_attrs="rrcc",
         log_path="logs/modified_rl/",
         memory_size=1000,
         actor_lr=1e-3,
-        restore_path="trained/",
+        restore_path="trained/rrcc-1/",
         batch_size=640,
-        episodes_n=200,
+        episodes_n=50,
     )

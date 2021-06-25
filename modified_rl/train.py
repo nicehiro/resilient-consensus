@@ -109,11 +109,11 @@ def train(**kwargs):
 
 
 if __name__ == "__main__":
-    probs = [0.5] * 4 + [1.0] * 8
+    probs = [0.1] * 4 + [1.0] * 8
     train(
-        bad_attrs="cccc",
+        bad_attrs="rrcc",
         probs=probs,
-        noise_scale=0.05,
+        noise_scale=0.01,
         log_path="logs/modified_rl/",
         memory_size=1000,
         actor_lr=1e-3,

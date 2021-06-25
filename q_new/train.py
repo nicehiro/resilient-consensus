@@ -25,6 +25,7 @@ def q_consensus(**kwargs):
         "cccc": [Attribute.CONSTANT] * 4,
     }
     node_attrs = bads_attrs[kwargs["bads_attrs"]] + [Attribute.NORMAL] * 8
+    # node_attrs = [Attribute.NORMAL] * 12
     env = Env(
         adjacent_matrix,
         node_attrs=node_attrs,
@@ -89,14 +90,14 @@ def q_consensus(**kwargs):
 
 
 if __name__ == "__main__":
-    probs = [0.5] * 4 + [1.0] * 8
+    probs = [0.1] * 4 + [1.0] * 8
     q_consensus(
         probs=probs,
-        noise_scale=0.05,
+        noise_scale=0.01,
         seeds=[i for i in range(12)],
         save_csv=True,
-        episodes_n=3000,
-        bads_attrs="cccc",
+        episodes_n=1000,
+        bads_attrs="rrcc",
         check_success=True,
-        baseline=0.1,
+        baseline=0.02,
     )

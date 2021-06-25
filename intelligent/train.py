@@ -11,7 +11,14 @@ from torch.utils.tensorboard import SummaryWriter
 def train(**kwargs):
     writer = SummaryWriter(kwargs["log_path"])
     node_attrs = [Attribute.INTELLIGENT] * 4 + [Attribute.NORMAL] * 8
-    env = Env(adjacent_matrix, node_attrs)
+    env = Env(
+        adjacent_matrix,
+        node_attrs=node_attrs,
+        probs=kwargs["probs"],
+        seeds=kwargs["seeds"],
+        times=1,
+        noise_scale=kwargs["noise_scale"],
+    )
 
     bads_n = 4
     goods_n = 8
@@ -42,8 +49,8 @@ def train(**kwargs):
     episodes_n = kwargs["episodes_n"]
     epochs_n = kwargs["epochs_n"]
     update_after = 10000
-    update_every = 20
-    start_steps = 50000
+    update_every = 10
+    start_steps = 1000
     t = 0
 
     # Main loop: collect experience in env and update/log each epoch
@@ -64,7 +71,7 @@ def train(**kwargs):
             # update value of node
             for i, node in enumerate(env.topology.nodes):
                 value = acts[i] if i < len(acts) else None
-                node.update_value(has_noise=True, value=value)
+                node.update_value(value=value)
             # get reward
             rews = env._reward()
             # get next observation
@@ -106,4 +113,13 @@ def train(**kwargs):
 
 
 if __name__ == "__main__":
-    train(log_path="./logs/intelligent/", episodes_n=20000, epochs_n=100)
+    probs = [1.0] * 4 + [1.0] * 8
+    train(
+        probs=probs,
+        noise_scale=0.01,
+        seeds=[i for i in range(12)],
+        save_csv=True,
+        episodes_n=3000,
+        epochs_n=50,
+        log_path="./logs/intelligent/",
+    )

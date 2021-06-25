@@ -34,12 +34,12 @@ def check_success_(noise_scale, baseline, bads_attrs, epochs, probs, save_csv):
 def check_success():
     bad_attrs = ["rrrr", "rrcc", "cccc"]
     # bad_attrs = ["cccc"]
-    indexs = ["0.{0}".format(i) for i in range(10, 0, -1)]
+    indexs = ["0.{0}".format(i) for i in range(10, -1, -1)]
     epochs = 500
     mean_epi_df = pd.DataFrame(columns=bad_attrs, index=indexs)
     success_df = pd.DataFrame(columns=bad_attrs, index=indexs)
     for bad_attr in bad_attrs:
-        for i in range(10, 0, -1):
+        for i in range(10, -1, -1):
             # for i in [10, 8, 5, 1]:
             probs = [i * 0.1] * 4 + [1.0] * 8
             print(
@@ -108,5 +108,6 @@ def check_success_baseline():
 
 
 if __name__ == "__main__":
-    check_success_noise_scale()
+    # check_success_noise_scale()
     # check_success_baseline()
+    check_success()
