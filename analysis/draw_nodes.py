@@ -1,8 +1,5 @@
 import sys
 
-sys.path.append("/home/hiro/Documents/resilient-consensus/")
-print(sys.path)
-
 import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -15,12 +12,32 @@ from colors import Color
 bads_n = 4
 goods_n = 8
 node_attrs = [Attribute.RANDOM] * 4 + [Attribute.NORMAL] * 8
+# node_attrs = [Attribute.NORMAL] + [Attribute.RANDOM] + [Attribute.NORMAL] * 2
+# adjacent_matrix = [[1, 1, 1, 0],
+#                    [0, 1, 0, 0],
+#                    [0, 1, 0, 1],
+#                    [1, 1, 0, 0]]
+adjacent_matrix = [
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+    [0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0],
+    [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+    [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0],
+    [0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+]
+
 env = Env(adjacent_matrix, node_attrs)
 
 matplotlib.use("Agg")
 G = nx.DiGraph()
 G.add_nodes_from([(i, {'color': Color.GREEN.value if node_attrs[i] is Attribute.NORMAL else Color.RED.value})
-                  for i in range(env.n)])
+                  for i in range(0, env.n)])
 
 options = {'node_size': 1000}
 pos = nx.circular_layout(G)
@@ -29,6 +46,8 @@ nx.draw_networkx_nodes(G, pos=pos,
                        nodelist=[0, 1, 2, 3], node_color=Color.RED.value, **options)
 nx.draw_networkx_nodes(G, pos=pos,
                        nodelist=[i for i in range(4, 12)], node_color=Color.GREEN.value, **options)
+# nx.draw_networkx_nodes(G, pos=pos,
+#                        nodelist=[0, 2, 3], node_color=Color.GREEN.value, **options)
 # draw node label
 nx.draw_networkx_labels(G, pos)
 
@@ -47,4 +66,4 @@ for i, node in enumerate(env.topology.nodes):
                                edge_color=color.value,
                                **options)
 
-plt.savefig("nodes.eps", format="eps")
+plt.savefig("./analysis/data/q-c/nodes.eps", format="eps")

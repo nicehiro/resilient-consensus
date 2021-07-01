@@ -8,23 +8,11 @@
 	],
 
 	"exclude": [
-		"**/__pycache__",
-	],
-
-	"ignore": [
+		"**/__pycache__"
 	],
 
 	"reportMissingImports": true,
 	"reportMissingTypeStubs": false,
 
-	"pythonVersion": "3.8",
-	"pythonPlatform": "Mac",
-
-	"executionEnvironments": [
-		{
-			"root": ".",
-			"pythonVersion": "3.8",
-			"pythonPlatform": "Mac",
-		},
-	]
+	"pythonPlatform": "Darwin"
 }

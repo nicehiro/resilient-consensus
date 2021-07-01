@@ -141,7 +141,7 @@ def many_logs2pandas(event_paths):
     return all_logs
 
 
-def logs2df(logdir_or_logfile: str, write_pkl: bool, write_csv: bool, out_dir: str):
+def logs2df(logdir_or_logfile: str):
     """This is a enhanced version of
     https://gist.github.com/ptschandl/ef67bbaa93ec67aba2cab0a7af47700b
     This script exctracts variables from all logs from tensorflow event

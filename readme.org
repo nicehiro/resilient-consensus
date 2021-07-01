@@ -1,9 +1,10 @@
-* Opinions
+* Resilient Consensus
 
 ** RL based
 *** DQN
 DQN agent for each agent in MARC.
-- FAILED No replay buffer, update every timestamp, idea mostly from normal MARC solve methods.
+- FAILED No replay buffer, update every timestamp, idea mostly from normal MARC
+   solve methods.
 - DIDNT TEST Use replay buffer, idea mostly from RL methods.
 
 *** DDPG
@@ -11,13 +12,28 @@ DDPG agent for each agent in MARC.
 - FAILED No replay buffer, update every timestamp.
 - SUCCESS With replay buffer. But still get big varience, gradient explosion.
 
+** Direct Backpropagation
+
 ** Q Consensus
 Suitable for different faulty nodes. Stable.
 
-** Battle
+* Drawbacks
+1. Q-C 方法在可变拓扑中会越来越信任自己。
 
-*** DDPG for good nodes vs. DDPG for bad nodes
-Balenced.
+3. RL based method need long time to train.
 
-*** Q Consensus vs DDPG
-Q Consensus only needs 1000 timestamps to get consensus. But DDPG needs much more time to finish training, and DDPG is very unstable. So Q Consensush is the winner.
+
+不加噪声时，可以使用收敛条件（连续 20 步 max-min<0.001），得到比较好的效果。
+
+加噪声之后，
+可变拓扑下，收敛条件过大（连续 20 步 max-min<0.05），0.1 和 0.9 都能收敛，收敛率为 100% ；
+收敛条件为（连续 20 步 max-min<0.03），0.9 可以收敛，但 0.1 无法很好的收敛，收敛率很低。
+
+固定拓扑下，收敛条件为（连续 20 步 max-min<0.03）时，有 100% 的收敛率，但在（连续 20 步 max-min<0.01），
+收敛效果也还可以，而且数据会有一点波动。
+
+所以，如果我们选一个比较大的收敛条件，那么收敛率都是 100%，如果选一个比较小的收敛条件，那么有些的收敛率就会很低。
+
+我想了几个解决方法：
+1. 用比较大的收敛条件，这样收敛率都是 100% 可以在文章里提一下，主要放收敛时间的图
+2. 能不能对不同情况，使用不同的收敛条件？
