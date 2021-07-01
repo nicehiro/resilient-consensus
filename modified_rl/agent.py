@@ -66,8 +66,9 @@ class Agent:
             data["done"],
         )
         self.optimizer.zero_grad()
-        v = o[:, self.node_index_of_weights].unsqueeze(dim=-1)
-        d = torch.sum(abs(o[:, self.node_index_of_weights + 1 :] - v) * a, dim=1)
+        # v = o[:, self.node_index_of_weights].unsqueeze(dim=-1)
+        # d = torch.sum(abs(o[:, self.node_index_of_weights + 1 :] - v) * a, dim=1)
+        d = torch.sum(abs(o) * a, dim=1)
         r = torch.exp(-20 * d)
         loss = -torch.mean(r)
         loss.backward()

@@ -31,7 +31,7 @@ def train(**kwargs):
 
     normals = [
         Agent(
-            obs_dim=env.features_n[i + bads_n],
+            obs_dim=env.features_n[i + bads_n]-1,
             act_dim=env.actions_n[i + bads_n],
             buffer_size=kwargs["memory_size"],
             lr=kwargs["actor_lr"],
@@ -109,11 +109,11 @@ def train(**kwargs):
 
 
 if __name__ == "__main__":
-    probs = [0.1] * 4 + [1.0] * 8
+    probs = [0.5] * 4 + [1.0] * 8
     train(
-        bad_attrs="rrcc",
+        bad_attrs="cccc",
         probs=probs,
-        noise_scale=0.01,
+        noise_scale=0.05,
         log_path="logs/modified_rl/",
         memory_size=1000,
         actor_lr=1e-3,

@@ -69,10 +69,15 @@ class Env(gym.Env):
         states = []
         for i, node in enumerate(self.topology.nodes):
             if node.attribute is Attribute.NORMAL:
-                state = np.zeros(shape=[self.features_n[i]])
-                state[0] = node.value
+                # method 1: use all neighbors' value and own value as state
+                # state = np.zeros(shape=[self.features_n[i]])
+                # state[0] = node.value
+                # for j, adj_index in enumerate(node.adjacents):
+                #     state[j + 1] = self.topology.nodes[adj_index].value
+                # method 2: use all relative neighbors' value distance as state
+                state = np.zeros(shape=[self.features_n[i] - 1])
                 for j, adj_index in enumerate(node.adjacents):
-                    state[j + 1] = self.topology.nodes[adj_index].value
+                    state[j] = self.topology.nodes[adj_index].value - self.topology.nodes[i].value
             elif node.attribute is Attribute.INTELLIGENT:
                 state = np.zeros(shape=[self.features_n[i]])
                 for j, node_j in enumerate(self.topology.nodes):

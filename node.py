@@ -112,10 +112,8 @@ class Node:
         """
         m = 0
         for adj, w in self.weights.items():
-            # noise = self.noise_scale * (random.random() * 2 - 1) * self.times
-            # noise = 0 if not has_noise else (random.random() * 2 - 1) / 100 * self.times
-            # w = 0 if w < 0.01 else w
-            # w = 0 if w < 0.1 else w
+            # w = 0 if w < 0.05 else w
+            w = 0 if w < 0.1 else w
             m += w * (adj.value - self.value)
         noise = self.noise_scale * (random.random() * 2 - 1) * self.times
         self.value = self.value + m + noise
