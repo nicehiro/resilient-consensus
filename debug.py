@@ -31,19 +31,17 @@ if __name__ == "__main__":
     #              tolerance=10,
     #              save_csv=False,
     #              with_noise=False)
-    modified_rl_train(
-        log_path="logs/modified_rl/",
-        evil_nodes_type="3r",
-        directed_graph=True,
-        memory_size=1000,
-        actor_lr=1e-3,
-        restore_path="trained/",
-        batch_size=640,
-        epochs_n=1000,
-        episodes_n=100,
-        update_after=10,
-        update_every=10,
-    )
+    # modified_rl_train(
+    #     log_path="logs/modified_rl/",
+    #     memory_size=1000,
+    #     actor_lr=1e-3,
+    #     restore_path="trained/",
+    #     batch_size=640,
+    #     epochs_n=1000,
+    #     episodes_n=100,
+    #     update_after=10,
+    #     update_every=10,
+    # )
     # dynamic_q_consensus(
     #     reset_env=False,
     #     evil_nodes_type="3r",
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     #     with_noise=True,
     #     directed_graph=True,
     # )
-    # q_consensus(reset_env=False, evil_nodes_type='2r1c', save_csv=True, with_noise=True, directed_graph=True)
+    q_consensus(save_csv=True)
     # batch_train(dqn_train, method='DQN', label='3c')
     # pg_train()
     # rival_maddpg_train(evil_nodes_type='maddpg')

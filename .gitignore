@@ -15,3 +15,7 @@ settings.json
 .VSCodeCounter/
 *.csv
 figures/
+*.eps
+.direnv/
+trained/
+*.json

@@ -1,33 +1,50 @@
+import sys
+
+sys.path.append("/home/hiro/Documents/resilient-consensus/")
+print(sys.path)
+
 import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
-from env import Env
-from car_adjust import CarEnv
+from rcenv import Env
+from utils import adjacent_matrix
+from attribute import Attribute
+from colors import Color
 
 
-def concat_edges(env: Env):
-    edges = []
-    for i, node in enumerate(env.map.nodes):
-        for k, _ in node.weights.items():
-            edges.append((k, i))
-    return edges
+bads_n = 4
+goods_n = 8
+node_attrs = [Attribute.RANDOM] * 4 + [Attribute.NORMAL] * 8
+env = Env(adjacent_matrix, node_attrs)
 
-
-# env = Env(nodes_n=10, evil_nodes_type='3r')
-env = CarEnv()
-
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 G = nx.DiGraph()
-G.add_nodes_from([x for x in range(env.nodes_n)])
-G.add_edges_from(concat_edges(env))
-nx.draw(G,
-        pos=nx.circular_layout(G),
-        with_labels=True,
-        # edge_color='b',
-        node_color=['#99A3A4' for _ in range(env.nodes_n-env.goods_n)] + ['green' for _ in range(env.goods_n)],
-        # arrowstyle='-',
-        node_size=1500,
-        font_size=14
-        )
-plt.show()
-plt.savefig('nodes.eps', format='eps')
+G.add_nodes_from([(i, {'color': Color.GREEN.value if node_attrs[i] is Attribute.NORMAL else Color.RED.value})
+                  for i in range(env.n)])
+
+options = {'node_size': 1000}
+pos = nx.circular_layout(G)
+# draw nodes
+nx.draw_networkx_nodes(G, pos=pos,
+                       nodelist=[0, 1, 2, 3], node_color=Color.RED.value, **options)
+nx.draw_networkx_nodes(G, pos=pos,
+                       nodelist=[i for i in range(4, 12)], node_color=Color.GREEN.value, **options)
+# draw node label
+nx.draw_networkx_labels(G, pos)
+
+# draw edges
+for i, node in enumerate(env.topology.nodes):
+    for adj, w in node.weights.items():
+        color = Color.GREEN if adj.attribute is Attribute.NORMAL else Color.RED
+        style = 'solid' if adj.attribute is Attribute.NORMAL else 'dashed'
+        nx.draw_networkx_edges(G,
+                               pos,
+                               edgelist=[[adj.index, i]],
+                               width=1,
+                               style=style,
+                               arrows=True,
+                               arrowsize=10,
+                               edge_color=color.value,
+                               **options)
+
+plt.savefig("nodes.eps", format="eps")

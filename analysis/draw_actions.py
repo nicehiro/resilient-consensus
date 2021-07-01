@@ -1,95 +1,109 @@
 import pandas as pd
-from env import Env
+from rcenv import Env
 import os
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 import matplotlib
 import numpy as np
 
+from utils import logs2df, linestyle_tuple, adjacent_matrix
+from attribute import Attribute
+
 from scipy.interpolate import make_interp_spline, BSpline
+from typing import Dict
 
 
 def x_fmt(tick_val, pos):
     val = int(tick_val) / 10000
-    return '{0}'.format(val)
+    return "{0}".format(val)
 
 
-def load_actions_of_node(path: str, x=2, y=4):
-    """Load actions of node_i.
+def load_actions_of_node(dfs, x=2, y=4):
+    """Load actions value of each normal node from tensorboard log file,
+    then draw weight training graph.
+
+        Args:
+           dfs Dict of DataFrames.
+           x X dimentions. (default 2)
+           y Y dimentions. (default 4)
+
+        Returns:
+            None
+
     """
-    matplotlib.use('Agg')
-    env = Env(nodes_n=10, evil_nodes_type='2r1c', directed_graph=True)
-    fig, axs = plt.subplots(x, y, constrained_layout=True, figsize=[10, 6])
-    data = {}
-    colors = ['#001d4a', '#33261D', '#4f345a', '#eca400', '#6e8898', '#8f2d56', '#d2a1b8', '#e4fde1', '#ab81cd', '#6b2737']
-    for file_name in os.listdir(path):
-        if file_name.startswith('.'):
-            continue
-        if os.path.isdir(os.path.join(path, file_name)):
-            continue
-        node, adj = file_name.split('-')
-        if node not in data:
-            data[node] = []
-        data[node].append(file_name)
-    # bright_colors = ['#3498DB', '#2ECC71', '#FFC300', '#DAF7A6', '#E74C3C']
-    # dark_colors = ['#0E6655', '#1A5276', '#873600']
-    for node, file_names in data.items():
-        pos_x, pos_y = (int(node)-3) // y, (int(node)-3) % y
-        adjs_n = env.map.nodes[int(node)].neighbors_n
-        adjs_total_weight = 1 - (1 / adjs_n)
-        labels = []
-        alphas = []
-        bad, good = 0, 0
-        for k, _ in env.map.nodes[int(node)].weights.items():
-            if k == int(node):
+    light_color = [
+        "#77AADD",
+        "#EE8866",
+        "#EEDD88",
+        "#FFAABB",
+        "#99DDFF",
+        "#44BB99",
+        "#DDDDDD",
+    ]
+    dark_color = [
+        "#0C5DA5",
+        "#FF9500",
+        "#CCBB44",
+        "#FF2C00",
+        "#0077BB",
+        "#009988",
+        "#9e9e9e",
+    ]
+    bad_attrs = [Attribute.RANDOM] * 4
+    node_attrs = bad_attrs + [Attribute.NORMAL] * 8
+    env = Env(adjacent_matrix, node_attrs, times=1, has_noise=True)
+    # matplotlib.use("Agg")
+    plt.style.use(["science", "ieee"])
+    fig, axs = plt.subplots(x, y, constrained_layout=True)
+    for row in range(x):
+        for column in range(y):
+            node_i = str(row * y + column + len(bad_attrs))
+            lines = []
+            line_labels = []
+
+            if str(node_i) not in dfs:
                 continue
-            if env.is_good(k):
-                alphas.append(0.3)
-                good += 1
-            else:
-                alphas.append(1)
-                bad += 1
-            labels.append('Adj {0}'.format(k))
-        # colors = bright_colors[:good] + dark_colors[:bad]
-        df = pd.read_csv(os.path.join(path, file_name))
-        for i, file_name in enumerate(file_names):
-            df2 = pd.read_csv(os.path.join(path, file_name))
-            df[file_name] = df2['Value']
-        df['sum'] = df.iloc[:, 2:].sum(axis=1)
-        file_names.sort()
-        for i, file_name in enumerate(file_names):
-            axs[pos_x][pos_y].plot(df['Step'], df[file_name] / df['sum'] * adjs_total_weight, color=colors[env.map.weights_index_without_self[int(node)][i]])
-        axs[pos_x][pos_y].legend(labels, loc='upper left', fontsize=8)
-        axs[pos_x][pos_y].set_title('Node {0}'.format(node))
-        axs[pos_x][pos_y].set_xlabel('Times / Million')
-        axs[pos_x][pos_y].set_ylabel('Actions(Weights)')
-        axs[pos_x][pos_y].xaxis.set_major_formatter(tick.FuncFormatter(x_fmt))
-    reward_path = os.path.join(path, 'rewards')
-    # df = pd.read_csv(os.path.join(reward_path, '3r.csv'))
-    file_names = os.listdir(reward_path)
-    file_names.sort()
-    for i, file_name in enumerate(file_names):
-        if file_name.startswith('.'):
-            continue
-        df = pd.read_csv(os.path.join(reward_path, file_name))
 
-        # xnew = np.linspace(df['Step'].min(), df['Step'].max(), 5)
-        # spl = make_interp_spline(df['Step'], df['Value'], k=3)
-        # smoothed = spl(xnew)
-        # axs[1, 3].plot(xnew, smoothed, color=colors[i])
-        axs[1, 3].plot(df['Step'], df['Value'].rolling(100).mean())
+            j = 0
+            for adj_i, adj_df in dfs[str(node_i)].items():
+                i = int(adj_i)
+                linestyle = (
+                    "-" if env.topology.nodes[i].attribute is Attribute.NORMAL else ":"
+                )
+                marker = (
+                    "" if env.topology.nodes[i].attribute is Attribute.NORMAL else "^"
+                )
+                with plt.style.context(["science", "ieee"]):
+                    t = adj_df[adj_df.iloc[:, 2] % 1 == 0].iloc[:, 1]
+                    axs[row][column].plot(
+                        t,
+                        color=light_color[j],
+                        alpha=0.6,
+                    )
+                    l = axs[row][column].plot(
+                        t.rolling(1000).mean(),
+                        color=dark_color[j],
+                        linestyle=linestyle,
+                        linewidth=0.5,
+                    )
+                    lines.append(l)
+                    line_labels.append("Adj {0}".format(adj_i))
+                j += 1
+            axs[row][column].legend(
+                handles=lines, labels=line_labels, loc="lower right"
+            )
+            axs[row][column].xaxis.set_major_formatter(x_fmt)
+            axs[row][column].set_xlabel("Times/10000")
+            axs[row][column].set_ylabel("Weights")
+            axs[row][column].set_title("Node {0}".format(node_i))
 
-        # axs[1, 3].plot(df['Step'], df['Value'], alpha=0.5, color=colors[i])
-    axs[1, 3].legend(['Node {0}'.format(i) for i in range(3, 11)], loc='upper left', fontsize=8)
-    axs[1, 3].set_title('Rewards')
-    axs[1, 3].set_xlabel('Times / Million')
-    axs[1, 3].set_ylabel('Rewards')
-    axs[1, 3].xaxis.set_major_formatter(tick.FuncFormatter(x_fmt))
-    fig.suptitle('D-DDPG Training Processes')
+    fig.suptitle("Training process of Modified RL")
+    save_name = "weights_of_rl.eps"
     plt.show()
-    plt.savefig('ddpg-1r2c-train.eps', format='eps')
+    # plt.savefig(save_name, format="eps")
 
 
-if __name__ == '__main__':
-    load_actions_of_node('./data/directed-2r1c-csv/')
-
+if __name__ == "__main__":
+    # load_actions_of_node('./data/directed-2r1c-csv/')
+    dfs = logs2df("./logs/modified_rl", False, True, "./data")
+    load_actions_of_node(dfs, 2, 4)

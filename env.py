@@ -104,6 +104,8 @@ class Map:
             s = sum_ - self.matrix[node_i][node_i]
             self.cleanup(node_i, choosen)
             l = len(choosen)
+        if l == 0:
+            return
         base_w = 1 / l
         others_w = 1 - base_w
         for i in range(self.nodes_n):
@@ -214,7 +216,7 @@ class Env:
         self.nodes_n = nodes_n
         self.times = times
         self.with_noise = with_noise
-        self.goods_n = 7
+        self.goods_n = 8
         self.rivals_n = 1
         self.randoms_n = 0
         self.constants_n = 2
@@ -236,6 +238,7 @@ class Env:
         node_random_1 = Node(0, random.random() * self.times, Property.RANDOM)
         node_random_2 = Node(1, random.random() * self.times, Property.RANDOM)
         node_random_3 = Node(2, random.random() * self.times, Property.RANDOM)
+        node_random_4 = Node(3, random.random() * self.times, Property.RANDOM)
         node_constant_1 = Node(1, random.random() * self.times, Property.CONSTANT)
         node_constant_2 = Node(2, random.random() * self.times, Property.CONSTANT)
         node_constant_3 = Node(0, random.random() * self.times, Property.CONSTANT)
@@ -245,13 +248,13 @@ class Env:
         node_maddpg_0 = Node(0, random.random() * self.times, Property.MADDPG)
         node_maddpg_1 = Node(1, random.random() * self.times, Property.MADDPG)
         node_maddpg_2 = Node(2, random.random() * self.times, Property.MADDPG)
-        if self.evil_nodes_type == "3r":
-            evil_nodes = [node_random_1, node_random_2, node_random_3]
-        elif self.evil_nodes_type == "2r1c":
+        if self.evil_nodes_type == "4r":
+            evil_nodes = [node_random_1, node_random_2, node_random_3, node_random_4]
+        elif self.evil_nodes_type == "2r2c":
             evil_nodes = [node_random_1, node_random_2, node_constant_2]
-        elif self.evil_nodes_type == "1r2c":
+        elif self.evil_nodes_type == "1r3c":
             evil_nodes = [node_random_1, node_constant_1, node_constant_2]
-        elif self.evil_nodes_type == "3c":
+        elif self.evil_nodes_type == "4c":
             evil_nodes = [node_constant_3, node_constant_1, node_constant_2]
         elif self.evil_nodes_type == "maddpg":
             evil_nodes = [node_maddpg_0, node_maddpg_1, node_maddpg_2]
@@ -259,7 +262,7 @@ class Env:
             evil_nodes = [node_rival_1, node_rival_2, node_rival_3]
         nodes = evil_nodes + [
             Node(i, random.random() * self.times, Property.GOOD)
-            for i in range(3, self.nodes_n)
+            for i in range(4, self.nodes_n)
         ]
         if not self.directed_graph:
             # undirected graph
@@ -299,20 +302,22 @@ class Env:
             nodes[0].weights = {0: 1}
             nodes[1].weights = {1: 1}
             nodes[2].weights = {2: 1}
-            nodes[3].weights = {
+            nodes[3].weights = {3: 1}
+            nodes[4].weights = {0: 0.25, 3: 0.25, 4: 0.25, 9: 0.25}
+            nodes[5].weights = {
                 0: 0.166,
                 1: 0.166,
-                3: 0.166,
                 4: 0.166,
-                7: 0.166,
-                9: 0.166,
+                5: 0.166,
+                6: 0.166,
+                11: 0.166,
             }
-            nodes[4].weights = {2: 0.25, 4: 0.25, 5: 0.25, 8: 0.25}
-            nodes[5].weights = {2: 0.33, 3: 0.33, 5: 0.33}
-            nodes[6].weights = {1: 0.25, 4: 0.25, 5: 0.25, 6: 0.25}
-            nodes[7].weights = {0: 0.25, 4: 0.25, 6: 0.25, 7: 0.25}
-            nodes[8].weights = {1: 0.25, 3: 0.25, 5: 0.25, 8: 0.25}
-            nodes[9].weights = {2: 0.25, 3: 0.25, 6: 0.25, 9: 0.25}
+            nodes[6].weights = {3: 0.25, 6: 0.25, 7: 0.25, 10: 0.25}
+            nodes[7].weights = {2: 0.33, 5: 0.33, 7: 0.33}
+            nodes[8].weights = {3: 0.25, 6: 0.25, 7: 0.25, 8: 0.25}
+            nodes[9].weights = {0: 0.25, 6: 0.25, 8: 0.25, 9: 0.25}
+            nodes[10].weights = {1: 0.25, 5: 0.25, 7: 0.25, 10: 0.25}
+            nodes[11].weights = {2: 0.25, 5: 0.25, 8: 0.25, 11: 0.25}
         features_n = []
         outputs_n = []
         for i, x in enumerate(nodes):
