@@ -1,7 +1,8 @@
+import os
 import sys
 
-sys.path.append("/home/hiro/Documents/resilient-consensus/")
-print(sys.path)
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -10,14 +11,18 @@ from rcenv import Env
 from utils import adjacent_matrix
 from attribute import Attribute
 from colors import Color
+import random
 
 
 bads_n = 4
 goods_n = 8
 node_attrs = [Attribute.RANDOM] * 4 + [Attribute.NORMAL] * 8
-env = Env(adjacent_matrix, node_attrs)
 
-matplotlib.use("Agg")
+probs = [0.5] * 4 + [0.5] * 8
+seeds = [random.random() * 100 for _ in range(12)]
+env = Env(adjacent_matrix, node_attrs, probs=probs, seeds=seeds)
+
+# matplotlib.use("Agg")
 G = nx.DiGraph()
 G.add_nodes_from([(i, {'color': Color.GREEN.value if node_attrs[i] is Attribute.NORMAL else Color.RED.value})
                   for i in range(env.n)])
@@ -47,4 +52,4 @@ for i, node in enumerate(env.topology.nodes):
                                edge_color=color.value,
                                **options)
 
-plt.savefig("nodes.eps", format="eps")
+plt.savefig("nodes.png", format="png")

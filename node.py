@@ -212,6 +212,32 @@ class ConstantNode(Node):
     def update_weight(self, weights):
         pass
 
+class WiredNode(Node):
+    def __init__(self, index, times, probs=1, seed=2, noise_scale=0.01) -> None:
+        """Constant node.
+
+        Args:
+            v (float): value
+            times (int): times of A
+        """
+        super().__init__(index, times, probs, seed, noise_scale)
+        self.attribute = Attribute.CONSTANT
+        self.probs = probs
+        # random.seed(self.seed)
+        # self.constant_value = random.random() * self.times
+    
+    def reset(self):
+        super().reset()
+        self.constant_value = self.value
+
+    def update_value(self, value=None):
+        if random.random() < self.probs:
+            self.value = self.constant_value
+        else:
+            self.update_value_normaly(value)
+
+    def update_weight(self, weights):
+        pass
 
 class IntelligentNode(Node):
     def __init__(self, index, times, probs=1, seed=3, noise_scale=0.01) -> None:

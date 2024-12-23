@@ -53,10 +53,11 @@ class Node:
 
 
 class Map:
-    def __init__(self, nodes: List[Node], times=1):
+    def __init__(self, nodes: List[Node], times=1, noise_scale=0.01):
         """Map contains a lot of Nodes."""
         self.nodes = nodes
         self.times = times
+        self.noise_scale = noise_scale
         self.nodes_n = len(nodes)
         self.matrix = self.__adja_matrix()
         self.weights_index = [[] for _ in range(self.nodes_n)]
@@ -137,7 +138,7 @@ class Map:
                 for i, w in node.weights.items():
                     m += w * (self.nodes[i].v - node.v)
                 noise = (
-                    (random.random() - 0.5) * 2 * self.times * 0.01 if with_noise else 0
+                    (random.random() - 0.5) * 2 * self.times * self.noise_scale if with_noise else 0
                 )
                 node.v += m + noise
             elif node.property == Property.CONSTANT:
@@ -211,6 +212,7 @@ class Env:
         reset_env=True,
         times=1,
         with_noise=False,
+        noise_scale=0.05,
         directed_graph=False,
     ):
         self.nodes_n = nodes_n
@@ -224,6 +226,7 @@ class Env:
         self.directed_graph = directed_graph
         self.distances = [0 for _ in range(self.nodes_n)]
         self.evil_nodes_type = evil_nodes_type
+        self.noise_scale = noise_scale
         self.map, self.features_n, self.outputs_n = self.make_map()
 
     def reset(self):
@@ -242,6 +245,7 @@ class Env:
         node_constant_1 = Node(1, random.random() * self.times, Property.CONSTANT)
         node_constant_2 = Node(2, random.random() * self.times, Property.CONSTANT)
         node_constant_3 = Node(0, random.random() * self.times, Property.CONSTANT)
+        node_constant_4 = Node(3, random.random() * self.times, Property.CONSTANT)
         node_rival_1 = Node(0, random.random() * self.times, Property.RIVAL)
         node_rival_2 = Node(1, random.random() * self.times, Property.RIVAL)
         node_rival_3 = Node(2, random.random() * self.times, Property.RIVAL)
@@ -251,11 +255,11 @@ class Env:
         if self.evil_nodes_type == "4r":
             evil_nodes = [node_random_1, node_random_2, node_random_3, node_random_4]
         elif self.evil_nodes_type == "2r2c":
-            evil_nodes = [node_random_1, node_random_2, node_constant_2]
+            evil_nodes = [node_random_1, node_random_2, node_constant_2, node_constant_1]
         elif self.evil_nodes_type == "1r3c":
-            evil_nodes = [node_random_1, node_constant_1, node_constant_2]
+            evil_nodes = [node_random_1, node_constant_1, node_constant_2, node_constant_3]
         elif self.evil_nodes_type == "4c":
-            evil_nodes = [node_constant_3, node_constant_1, node_constant_2]
+            evil_nodes = [node_constant_1, node_constant_2, node_constant_3, node_constant_4]
         elif self.evil_nodes_type == "maddpg":
             evil_nodes = [node_maddpg_0, node_maddpg_1, node_maddpg_2]
         elif self.evil_nodes_type == "rival":
@@ -338,7 +342,7 @@ class Env:
                 # doesn't need to train
                 features_n.append(-1)
                 outputs_n.append(-1)
-        return Map(nodes, times=self.times), features_n, outputs_n
+        return Map(nodes, times=self.times, noise_scale=self.noise_scale), features_n, outputs_n
 
     def step(self, action, node_i, is_continuous=False, update_value=False):
         """Update node_i's weights."""

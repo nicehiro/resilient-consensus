@@ -13,3 +13,5 @@ class Attribute(Enum):
     RANDOM = 2
     CONSTANT = 3
     INTELLIGENT = 4
+
+    WIRED = 5

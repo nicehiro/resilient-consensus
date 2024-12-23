@@ -4,6 +4,12 @@ import numpy as np
 import pandas as pd
 from gym.spaces import Box
 
+import os
+import sys
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+
 from ddpg.agent import Agent
 from env import Env
 from torch.utils.tensorboard import SummaryWriter
@@ -12,10 +18,12 @@ from utils import normalize
 
 def train(**kwargs):
     env = Env(
-        nodes_n=10,
+        nodes_n=12,
         evil_nodes_type=kwargs["evil_nodes_type"],
         reset_env=kwargs["reset_env"],
         directed_graph=kwargs["directed_graph"],
+        with_noise=kwargs["with_noise"],
+        noise_scale=kwargs["noise_scale"],
     )
     writer = SummaryWriter(kwargs["log_path"])
     agents = [
@@ -47,6 +55,8 @@ def train(**kwargs):
             hidden_size=kwargs["hidden_size"],
             actor_lr=kwargs["actor_lr"],
             critic_lr=kwargs["critic_lr"],
+            noise_scale=0.0,
+            restore_path=kwargs["restore_path"],
         )
         if env.is_good(i)
         else None
@@ -54,13 +64,15 @@ def train(**kwargs):
     ]
     episodes_n = kwargs["episodes_n"]
     epochs_n = kwargs["epochs_n"]
-    update_after = 10000
-    update_every = 20
+    update_after = kwargs["update_after"]
+    update_every = kwargs["update_every"]
     start_steps = 1000
     t = 0
 
     if kwargs["save_csv"]:
         df = pd.DataFrame(columns=["Node{0}".format(i) for i in range(env.nodes_n)])
+
+    os.makedirs(kwargs["restore_path"], exist_ok=True)
 
     # Main loop: collect experience in env and update/log each epoch
     for epi in range(episodes_n):
@@ -91,8 +103,8 @@ def train(**kwargs):
                     if _act is None:
                         continue
                     writer.add_scalars(
-                        "Agent {0} actions".format(i),
-                        {"{0}".format(j): a.item() for j, a in enumerate(_act)},
+                        "Actions of Node {0}".format(i),
+                        {"Adj {0}".format(j): a.item() for j, a in enumerate(_act)},
                         t,
                     )
 
@@ -129,14 +141,14 @@ def train(**kwargs):
 
             if kwargs["train"]:
                 # Update handling
-                if t >= update_after and t % update_every == 0:
+                if t % update_every == 0:
                     for i, agent in enumerate(agents):
                         if not agent:
                             continue
-                        for j in range(2):
-                            loss_q, loss_pi = agent.optimize()
-                        writer.add_scalar("Loss Q/Node {0}".format(i), loss_q, t)
-                        writer.add_scalar("Loss Pi/Node {0}".format(i), loss_pi, t)
+                        # for j in range(2):
+                        loss_q, loss_pi = agent.optimize()
+                        writer.add_scalar("Loss Q of Node {0}".format(i), loss_q, t)
+                        writer.add_scalar("Loss Pi of Node {0}".format(i), loss_pi, t)
 
         # End of trajectory handling
         if kwargs["train"]:
@@ -150,4 +162,25 @@ def train(**kwargs):
 
 
 if __name__ == "__main__":
-    train()
+    train(
+        evil_nodes_type="4c",
+        reset_env=True,
+        directed_graph=True,
+        log_path="logs/ddpg/",
+        train=True,
+        memory_size=1000,
+        batch_size=640,
+        polyak=0.95,
+        hidden_layer=1,
+        hidden_size=256,
+        actor_lr=1e-3,
+        critic_lr=1e-3,
+        save_csv=False,
+        with_noise=True,
+        noise_scale=0.05,
+        episodes_n=4000,
+        epochs_n=50,
+        update_after=10,
+        update_every=10,
+        restore_path="logs/ddpg/model/",
+    )

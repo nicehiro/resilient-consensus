@@ -23,10 +23,10 @@ class Agent:
                  noise_scale=0.05,
                  batch_size=64,
                  restore_path='./models/ddpg/',
-                 evil_nodes_type='3r',
                  train=False,
                  hidden_layer=3,
-                 hidden_size=256):
+                 hidden_size=256,
+                 value=0):
         self.node_i = node_i
         self.obs_dim = observation_space.shape[0]
         if isinstance(observation_space, Box):
@@ -46,11 +46,14 @@ class Agent:
         self.noise_scale = noise_scale
         self.act_limit = action_space.high[0]
         self.batch_size = batch_size
-        self.evil_nodes_type = evil_nodes_type
         self.train = train
-        self.restore_path = restore_path + '{0}/{1}.pkl'.format(self.evil_nodes_type, node_i)
+        self.restore_path = restore_path + '{0}'.format(node_i)
+        self.value = value
         if not self.train:
             self.restore()
+
+    def update_value(self, value):
+        self.value = value
 
     def act(self, obs):
         a = self.ac.act(torch.as_tensor(obs, dtype=torch.float32))
@@ -87,8 +90,10 @@ class Agent:
             self.q_optimizer.zero_grad()
             loss_q, loss_info = compute_loss_q(data)
             loss_q.backward()
-            nn.utils.clip_grad_value_(self.ac.pi.parameters(), clip_value=0.5)
-            nn.utils.clip_grad_value_(self.ac.q.parameters(), clip_value=0.5)
+            nn.utils.clip_grad_norm_(self.ac.q.parameters(), 0.5)
+            nn.utils.clip_grad_norm_(self.ac.pi.parameters(), 0.5)
+            # nn.utils.clip_grad_value_(self.ac.pi.parameters(), clip_value=0.5)
+            # nn.utils.clip_grad_value_(self.ac.q.parameters(), clip_value=0.5)
             self.q_optimizer.step()
 
             # Freeze Q-network so you don't waste computational effort
@@ -119,8 +124,6 @@ class Agent:
 
         batch = self.memory.sample_batch(self.batch_size)
         loss_q, loss_pi = update(batch)
-        if self.train:
-            self.save()
         return loss_q, loss_pi
 
     def save(self):
